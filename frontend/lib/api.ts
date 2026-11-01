@@ -5,7 +5,7 @@ const API_URL =
 type RequestOptions = {
   method?: string;
   body?: unknown;
-  token?: string;
+  token?: string | null;
 };
 
 export async function apiRequest(
