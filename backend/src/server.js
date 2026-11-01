@@ -42,10 +42,14 @@ const PORT = process.env.PORT || 5000;
 // ==========================================
 // CORS
 // ==========================================
-const allowedOrigins = [
+const allowedOrigins = new Set([
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-];
+  ...(process.env.FRONTEND_URLS || "")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/+$/, ""))
+    .filter(Boolean),
+]);
 
 app.use(
   cors({
@@ -55,7 +59,7 @@ app.use(
         return callback(null, true);
       }
 
-      if (allowedOrigins.includes(origin)) {
+      if (allowedOrigins.has(origin.replace(/\/+$/, ""))) {
         return callback(null, true);
       }
 
