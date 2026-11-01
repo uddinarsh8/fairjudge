@@ -10,8 +10,6 @@ const registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    console.log("Registration request body:", req.body);
-
     // -------------------------------------------------
     // VALIDATION
     // -------------------------------------------------
@@ -30,16 +28,12 @@ const registerUser = async (req, res) => {
     const allowedRoles = [
       "TEAM",
       "MEMBER",
-      "JUDGE",
       "ORGANIZER",
     ];
 
     const userRole = role
       ? String(role).trim().toUpperCase()
       : "TEAM";
-
-    console.log("Received role:", role);
-    console.log("Processed role:", userRole);
 
     // -------------------------------------------------
     // VALIDATE ROLE

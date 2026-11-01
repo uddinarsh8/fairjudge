@@ -28,6 +28,12 @@ type Criterion = {
   scoringLevels: ScoringLevel[];
 };
 
+type EvaluationRound = {
+  _id: string;
+  name: string;
+  roundNumber: number;
+};
+
 const defaultScoringLevels: ScoringLevel[] = [
   {
     name: "BEST",
@@ -83,6 +89,7 @@ useEffect(() => {
   // STATES
   // ==========================================
 
+  const [rounds, setRounds] = useState<EvaluationRound[]>([]);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -164,6 +171,36 @@ useEffect(() => {
   useEffect(() => {
     loadCriteria();
   }, [loadCriteria]);
+
+  useEffect(() => {
+    if (authLoading || !token || !hackathonId) return;
+
+    let active = true;
+    const loadRounds = async () => {
+      try {
+        const response = await apiRequest(`/rounds/${hackathonId}`, { token });
+        if (active) {
+          setRounds(Array.isArray(response?.rounds) ? response.rounds : []);
+        }
+      } catch (roundError) {
+        if (active) {
+          setError(
+            roundError instanceof Error
+              ? roundError.message
+              : "Unable to load the round list."
+          );
+        }
+      }
+    };
+
+    queueMicrotask(() => {
+      void loadRounds();
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [authLoading, hackathonId, token]);
 
   // ==========================================
   // TOTAL WEIGHT
@@ -415,7 +452,7 @@ useEffect(() => {
           type="button"
           onClick={() =>
             router.push(
-              `/organizer/hackathons/${hackathonId}/rounds/${roundId}`
+              `/organizer/hackathons/${hackathonId}/rounds`
             )
           }
           className="mb-6 text-sm text-slate-400 transition hover:text-white"
@@ -440,6 +477,31 @@ useEffect(() => {
               Define the evaluation criteria and scoring
               levels that judges will use for this round.
             </p>
+
+            <label className="mt-5 block max-w-xl text-sm font-medium text-slate-300">
+              Select Round
+              <select
+                value={roundId}
+                onChange={(event) => {
+                  const selectedRoundId = event.target.value;
+                  if (selectedRoundId && selectedRoundId !== roundId) {
+                    router.push(
+                      `/organizer/hackathons/${hackathonId}/rounds/${selectedRoundId}/criteria`
+                    );
+                  }
+                }}
+                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
+              >
+                {!rounds.some((round) => round._id === roundId) && (
+                  <option value={roundId}>Current round</option>
+                )}
+                {rounds.map((round) => (
+                  <option key={round._id} value={round._id}>
+                    Round {round.roundNumber} — {round.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {/* TOTAL WEIGHT */}

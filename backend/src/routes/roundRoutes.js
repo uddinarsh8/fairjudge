@@ -3,6 +3,7 @@ const express = require("express");
 const {
   createRound,
   getRounds,
+  getPublicRounds,
   updateRound,
   deleteRound,
 } = require("../controllers/roundController");
@@ -11,6 +12,9 @@ const protect = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
 
 const router = express.Router();
+
+// Participant facing schedule for published hackathons.
+router.get("/public/:publicId", getPublicRounds);
 
 
 // ======================================================

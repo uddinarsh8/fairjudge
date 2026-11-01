@@ -5,6 +5,9 @@ const Team = require("../models/Team");
 const Judge = require("../models/Judge");
 const Round = require("../models/Round");
 const Evaluation = require("../models/Evaluation");
+const EvaluationCriteria = require("../models/EvaluationCriteria");
+const JudgeAssignment = require("../models/JudgeAssignment");
+const Project = require("../models/Project");
 
 // ======================================================
 // HELPER - GET USER ID
@@ -44,6 +47,13 @@ const createHackathon = async (req, res) => {
       description,
       startDate,
       endDate,
+      location = "",
+      mode = "ONLINE",
+      prizePool = 0,
+      registrationFee = 0,
+      registrationFeeType = "PER_TEAM",
+      minTeamSize = 1,
+      maxTeamSize = 5,
     } = req.body;
 
     const organizerId = getUserId(req);
@@ -100,6 +110,53 @@ const createHackathon = async (req, res) => {
       });
     }
 
+    const normalizedMode = String(mode).trim().toUpperCase();
+    const normalizedFeeType = String(registrationFeeType).trim().toUpperCase();
+    const normalizedPrizePool = Number(prizePool);
+    const normalizedRegistrationFee = Number(registrationFee);
+    const normalizedMinTeamSize = Number(minTeamSize);
+    const normalizedMaxTeamSize = Number(maxTeamSize);
+
+    if (!["ONLINE", "OFFLINE", "HYBRID"].includes(normalizedMode)) {
+      return res.status(400).json({
+        success: false,
+        message: "Mode must be Online, Offline or Hybrid",
+      });
+    }
+
+    if (!["PER_MEMBER", "PER_TEAM"].includes(normalizedFeeType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Registration fee type must be per member or per team",
+      });
+    }
+
+    if (
+      !Number.isFinite(normalizedPrizePool) ||
+      normalizedPrizePool < 0 ||
+      !Number.isFinite(normalizedRegistrationFee) ||
+      normalizedRegistrationFee < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Prize pool and registration fee must be non-negative amounts",
+      });
+    }
+
+    if (
+      !Number.isInteger(normalizedMinTeamSize) ||
+      normalizedMinTeamSize < 1 ||
+      normalizedMinTeamSize > 100 ||
+      !Number.isInteger(normalizedMaxTeamSize) ||
+      normalizedMaxTeamSize < normalizedMinTeamSize ||
+      normalizedMaxTeamSize > 100
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Team size must be between 1 and 100, with maximum size at least the minimum size",
+      });
+    }
+
     // --------------------------------------------------
     // GENERATE UNIQUE PUBLIC ID
     // --------------------------------------------------
@@ -125,6 +182,13 @@ const createHackathon = async (req, res) => {
       description: description.trim(),
       startDate: parsedStartDate,
       endDate: parsedEndDate,
+      location: typeof location === "string" ? location.trim() : "",
+      mode: normalizedMode,
+      prizePool: normalizedPrizePool,
+      registrationFee: normalizedRegistrationFee,
+      registrationFeeType: normalizedFeeType,
+      minTeamSize: normalizedMinTeamSize,
+      maxTeamSize: normalizedMaxTeamSize,
       status: "DRAFT",
       isPublished: false,
       organizer: organizerId,
@@ -453,6 +517,29 @@ const getOrganizerHackathons = async (
 // GET /api/hackathons/public/:publicId
 // ======================================================
 
+const getPublicHackathons = async (req, res) => {
+  try {
+    const hackathons = await Hackathon.find({
+      isPublished: true,
+      status: { $in: ["UPCOMING", "ACTIVE"] },
+    })
+      .select("hackathonId name description startDate endDate location mode prizePool registrationFee registrationFeeType minTeamSize maxTeamSize status")
+      .sort({ startDate: 1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      hackathons,
+    });
+  } catch (error) {
+    console.error("Get public hackathons error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching available hackathons",
+    });
+  }
+};
+
 const getHackathonByPublicId = async (
   req,
   res
@@ -472,7 +559,11 @@ const getHackathonByPublicId = async (
         hackathonId: publicId
           .trim()
           .toUpperCase(),
-      }).select("-__v");
+        isPublished: true,
+        status: { $in: ["UPCOMING", "ACTIVE"] },
+      }).select(
+        "hackathonId name description startDate endDate location mode prizePool registrationFee registrationFeeType minTeamSize maxTeamSize status"
+      );
 
     if (!hackathon) {
       return res.status(404).json({
@@ -616,30 +707,6 @@ const publishHackathon = async (
     }
 
     // --------------------------------------------------
-    // CHECK SETUP
-    // --------------------------------------------------
-
-    if (
-      !hackathon.setup?.roundsConfigured
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Please configure hackathon rounds before publishing",
-      });
-    }
-
-    if (
-      !hackathon.setup?.evaluationConfigured
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Please configure evaluation before publishing",
-      });
-    }
-
-    // --------------------------------------------------
     // PUBLISH
     // --------------------------------------------------
 
@@ -688,6 +755,13 @@ const updateHackathon = async (
       startDate,
       endDate,
       status,
+      location,
+      mode,
+      prizePool,
+      registrationFee,
+      registrationFeeType,
+      minTeamSize,
+      maxTeamSize,
     } = req.body;
 
     const organizerId = getUserId(req);
@@ -833,6 +907,91 @@ const updateHackathon = async (
       hackathon.status = status;
     }
 
+    if (location !== undefined) {
+      if (typeof location !== "string") {
+        return res.status(400).json({
+          success: false,
+          message: "Location must be text",
+        });
+      }
+      hackathon.location = location.trim();
+    }
+
+    if (mode !== undefined) {
+      const normalizedMode = String(mode).trim().toUpperCase();
+      if (!["ONLINE", "OFFLINE", "HYBRID"].includes(normalizedMode)) {
+        return res.status(400).json({
+          success: false,
+          message: "Mode must be Online, Offline or Hybrid",
+        });
+      }
+      hackathon.mode = normalizedMode;
+    }
+
+    if (prizePool !== undefined) {
+      const normalizedPrizePool = Number(prizePool);
+      if (!Number.isFinite(normalizedPrizePool) || normalizedPrizePool < 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Prize pool must be a non-negative amount",
+        });
+      }
+      hackathon.prizePool = normalizedPrizePool;
+    }
+
+    if (registrationFee !== undefined) {
+      const normalizedRegistrationFee = Number(registrationFee);
+      if (
+        !Number.isFinite(normalizedRegistrationFee) ||
+        normalizedRegistrationFee < 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Registration fee must be a non-negative amount",
+        });
+      }
+      hackathon.registrationFee = normalizedRegistrationFee;
+    }
+
+    if (registrationFeeType !== undefined) {
+      const normalizedFeeType = String(registrationFeeType)
+        .trim()
+        .toUpperCase();
+      if (!["PER_MEMBER", "PER_TEAM"].includes(normalizedFeeType)) {
+        return res.status(400).json({
+          success: false,
+          message: "Registration fee type must be per member or per team",
+        });
+      }
+      hackathon.registrationFeeType = normalizedFeeType;
+    }
+
+    const updatedMinTeamSize =
+      minTeamSize !== undefined
+        ? Number(minTeamSize)
+        : Number(hackathon.minTeamSize ?? 1);
+    const updatedMaxTeamSize =
+      maxTeamSize !== undefined
+        ? Number(maxTeamSize)
+        : Number(hackathon.maxTeamSize ?? 5);
+
+    if (
+      !Number.isInteger(updatedMinTeamSize) ||
+      updatedMinTeamSize < 1 ||
+      updatedMinTeamSize > 100 ||
+      !Number.isInteger(updatedMaxTeamSize) ||
+      updatedMaxTeamSize < updatedMinTeamSize ||
+      updatedMaxTeamSize > 100
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Team size must be between 1 and 100, with maximum size at least the minimum size",
+      });
+    }
+
+    hackathon.minTeamSize = updatedMinTeamSize;
+    hackathon.maxTeamSize = updatedMaxTeamSize;
+
     // --------------------------------------------------
     // SAVE
     // --------------------------------------------------
@@ -922,6 +1081,251 @@ const deleteHackathon = async (
     });
   }
 };
+// ======================================================
+// START EVALUATION
+// POST /api/hackathons/:id/start-evaluation
+// Organizer only
+// ======================================================
+
+const startEvaluation = async (req, res) => {
+  try {
+    const organizerId = getUserId(req);
+    const { id } = req.params;
+
+    // Validate authentication.
+    if (!organizerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    // Validate MongoDB hackathon ID.
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid hackathon ID",
+      });
+    }
+
+    // Verify ownership.
+    const hackathon = await Hackathon.findOne({
+      _id: id,
+      organizer: organizerId,
+    });
+
+    if (!hackathon) {
+      return res.status(404).json({
+        success: false,
+        message: "Hackathon not found",
+      });
+    }
+
+    if (hackathon.status === "ACTIVE") {
+      return res.status(409).json({
+        success: false,
+        message: "Evaluation has already started",
+      });
+    }
+
+    if (hackathon.status === "COMPLETED") {
+      return res.status(400).json({
+        success: false,
+        message: "A completed hackathon cannot be started again",
+      });
+    }
+
+    // --------------------------------------------------
+    // 1. CHECK ROUNDS
+    // --------------------------------------------------
+
+    const rounds = await Round.find({
+      hackathon: id,
+    }).sort({ roundNumber: 1 });
+
+    if (rounds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Create at least one evaluation round first",
+      });
+    }
+
+    // --------------------------------------------------
+    // 2. CHECK CRITERIA FOR EVERY ROUND
+    // Each round must have valid criteria totaling 100%.
+    // --------------------------------------------------
+
+    const requiredLevels = [
+      "BEST",
+      "GOOD",
+      "AVERAGE",
+      "POOR",
+      "WORST",
+    ];
+
+    for (const round of rounds) {
+      const criteria = await EvaluationCriteria.find({
+        hackathon: id,
+        round: round._id,
+      }).lean();
+
+      if (criteria.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Configure scoring criteria for "${round.name}"`,
+        });
+      }
+
+      const totalWeight = criteria.reduce(
+        (total, criterion) =>
+          total + Number(criterion.weight || 0),
+        0
+      );
+
+      if (Math.abs(totalWeight - 100) >= 0.001) {
+        return res.status(400).json({
+          success: false,
+          message:
+            `Criteria for "${round.name}" must total 100%. Current total: ${totalWeight}%`,
+        });
+      }
+
+      for (const criterion of criteria) {
+        const levels = criterion.scoringLevels;
+
+        if (
+          !Array.isArray(levels) ||
+          levels.length !== 5
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              `Complete the five scoring levels for "${criterion.name}"`,
+          });
+        }
+
+        for (const requiredLevel of requiredLevels) {
+          const level = levels.find(
+            (item) => item.name === requiredLevel
+          );
+
+          if (
+            !level ||
+            level.score === undefined ||
+            !Number.isFinite(Number(level.score)) ||
+            typeof level.description !== "string" ||
+            !level.description.trim()
+          ) {
+            return res.status(400).json({
+              success: false,
+              message:
+                `Invalid ${requiredLevel} scoring level in "${criterion.name}"`,
+            });
+          }
+        }
+      }
+    }
+
+    // --------------------------------------------------
+    // 3. CHECK APPROVED TEAMS
+    // --------------------------------------------------
+
+    const approvedTeams = await Team.find({
+      hackathon: id,
+      status: "APPROVED",
+    }).select("_id");
+
+    if (approvedTeams.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Approve at least one team before starting evaluation",
+      });
+    }
+
+    // --------------------------------------------------
+    // 4. CHECK SUBMITTED PROJECTS
+    // --------------------------------------------------
+
+    const approvedTeamIds = approvedTeams.map(
+      (team) => team._id
+    );
+
+    const projects = await Project.find({
+      hackathon: id,
+      team: { $in: approvedTeamIds },
+    }).select("_id team");
+
+    const teamIdsWithProjects = new Set(
+      projects.map((project) => String(project.team))
+    );
+
+    if (teamIdsWithProjects.size === 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "At least one approved team must submit a project",
+      });
+    }
+
+    // --------------------------------------------------
+    // 5. CHECK JUDGE ASSIGNMENTS FOR EACH ROUND
+    // --------------------------------------------------
+
+    for (const round of rounds) {
+      const assignment = await JudgeAssignment.findOne({
+        hackathon: id,
+        round: round._id,
+      }).select("_id");
+
+      if (!assignment) {
+        return res.status(400).json({
+          success: false,
+          message:
+            `Assign at least one judge for "${round.name}"`,
+        });
+      }
+    }
+
+    // --------------------------------------------------
+    // 6. UPDATE HACKATHON STATUS
+    // --------------------------------------------------
+
+    if (!hackathon.setup) {
+      hackathon.setup = {};
+    }
+
+    hackathon.setup.roundsConfigured = true;
+    hackathon.setup.evaluationConfigured = true;
+
+    // Starting evaluation makes the hackathon live.
+    hackathon.isPublished = true;
+    hackathon.status = "ACTIVE";
+
+    await hackathon.save();
+
+    // Activate the first round.
+    const firstRound = rounds[0];
+
+    firstRound.status = "ACTIVE";
+    await firstRound.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Evaluation started successfully",
+      hackathon,
+      activeRound: firstRound,
+    });
+  } catch (error) {
+    console.error("Start evaluation error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error while starting evaluation",
+      error: error.message,
+    });
+  }
+};
 
 // ======================================================
 // EXPORTS
@@ -934,5 +1338,7 @@ module.exports = {
   updateHackathon,
   deleteHackathon,
   publishHackathon,
+  getPublicHackathons,
   getHackathonByPublicId,
+  startEvaluation,
 };

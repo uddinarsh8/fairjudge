@@ -3,9 +3,25 @@ const Round = require("../models/Round");
 const Hackathon = require("../models/Hackathon");
 
 // ======================================================
+// HELPER: SYNC ROUND CONFIGURATION STATUS
+// ======================================================
+
+const syncRoundsConfigured = async (hackathon) => {
+  const roundCount = await Round.countDocuments({
+    hackathon: hackathon._id,
+  });
+
+  hackathon.setup.roundsConfigured = roundCount > 0;
+
+  await hackathon.save();
+
+  return roundCount;
+};
+
+// ======================================================
 // CREATE ROUND
-// Organizer only
 // POST /rounds/:hackathonId
+// Organizer only
 // ======================================================
 
 const createRound = async (req, res) => {
@@ -19,10 +35,6 @@ const createRound = async (req, res) => {
       startDate,
       endDate,
     } = req.body;
-
-    // --------------------------------------------------
-    // Validate Hackathon ID
-    // --------------------------------------------------
 
     if (!hackathonId) {
       return res.status(400).json({
@@ -38,10 +50,6 @@ const createRound = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
-    // Validate required fields
-    // --------------------------------------------------
-
     if (
       !name ||
       roundNumber === undefined ||
@@ -56,10 +64,6 @@ const createRound = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
-    // Validate round number
-    // --------------------------------------------------
-
     const parsedRoundNumber = Number(roundNumber);
 
     if (
@@ -72,27 +76,29 @@ const createRound = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
-    // Verify organizer owns hackathon
-    // --------------------------------------------------
+    const organizerId = req.user?.userId;
 
+    if (!organizerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated user ID not found",
+      });
+    }
+
+    // Verify that the organizer owns this hackathon.
     const hackathon = await Hackathon.findOne({
       _id: hackathonId,
-      organizer: req.user.userId,
+      organizer: organizerId,
     });
 
     if (!hackathon) {
       return res.status(404).json({
         success: false,
-        message:
-          "Hackathon not found or you are not authorized",
+        message: "Hackathon not found or you are not authorized",
       });
     }
 
-    // --------------------------------------------------
-    // Validate dates
-    // --------------------------------------------------
-
+    // Validate round dates.
     const start = new Date(startDate);
     const end = new Date(endDate);
 
@@ -113,15 +119,11 @@ const createRound = async (req, res) => {
     if (end <= start) {
       return res.status(400).json({
         success: false,
-        message:
-          "Round end date must be after start date",
+        message: "Round end date must be after start date",
       });
     }
 
-    // --------------------------------------------------
-    // Validate hackathon dates
-    // --------------------------------------------------
-
+    // Validate the hackathon's dates.
     const hackathonStart = new Date(hackathon.startDate);
     const hackathonEnd = new Date(hackathon.endDate);
 
@@ -131,30 +133,22 @@ const createRound = async (req, res) => {
     ) {
       return res.status(500).json({
         success: false,
-        message:
-          "Hackathon has invalid start or end date",
+        message: "Hackathon has invalid start or end date",
       });
     }
 
-    // --------------------------------------------------
-    // Keep round dates inside hackathon dates
-    // --------------------------------------------------
-
+    // A round must fall within the hackathon's dates.
     if (
       start < hackathonStart ||
       end > hackathonEnd
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Round dates must be within the hackathon dates",
+        message: "Round dates must be within the hackathon dates",
       });
     }
 
-    // --------------------------------------------------
-    // Prevent duplicate round numbers
-    // --------------------------------------------------
-
+    // Prevent duplicate round numbers.
     const existingRound = await Round.findOne({
       hackathon: hackathonId,
       roundNumber: parsedRoundNumber,
@@ -163,29 +157,22 @@ const createRound = async (req, res) => {
     if (existingRound) {
       return res.status(409).json({
         success: false,
-        message:
-          "A round with this round number already exists",
+        message: "A round with this round number already exists",
       });
     }
 
-    // --------------------------------------------------
-    // Create round
-    // --------------------------------------------------
-
+    // Create the round.
     const round = await Round.create({
       hackathon: hackathonId,
       name: name.trim(),
-      description: description
-        ? description.trim()
-        : "",
+      description: description ? description.trim() : "",
       roundNumber: parsedRoundNumber,
       startDate: start,
       endDate: end,
     });
 
-    // --------------------------------------------------
-    // Success response
-    // --------------------------------------------------
+    // Update the setup flag used by the publish endpoint.
+    await syncRoundsConfigured(hackathon);
 
     return res.status(201).json({
       success: true,
@@ -195,21 +182,12 @@ const createRound = async (req, res) => {
   } catch (error) {
     console.error("Create round error:", error);
 
-    // --------------------------------------------------
-    // Duplicate key error
-    // --------------------------------------------------
-
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
-        message:
-          "A round with this round number already exists",
+        message: "A round with this round number already exists",
       });
     }
-
-    // --------------------------------------------------
-    // Invalid ObjectId
-    // --------------------------------------------------
 
     if (error.name === "CastError") {
       return res.status(400).json({
@@ -220,26 +198,21 @@ const createRound = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message:
-        "Server error while creating round",
+      message: "Server error while creating round",
+      error: error.message,
     });
   }
 };
 
-
 // ======================================================
-// GET ALL ROUNDS FOR A HACKATHON
-// Organizer only
+// GET ALL ROUNDS
 // GET /rounds/:hackathonId
+// Organizer only
 // ======================================================
 
 const getRounds = async (req, res) => {
   try {
     const { hackathonId } = req.params;
-
-    // --------------------------------------------------
-    // Validate ID
-    // --------------------------------------------------
 
     if (!hackathonId) {
       return res.status(400).json({
@@ -255,27 +228,29 @@ const getRounds = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
-    // Verify organizer owns hackathon
-    // --------------------------------------------------
+    const organizerId = req.user?.userId;
 
+    if (!organizerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated user ID not found",
+      });
+    }
+
+    // Verify ownership.
     const hackathon = await Hackathon.findOne({
       _id: hackathonId,
-      organizer: req.user.userId,
+      organizer: organizerId,
     });
 
     if (!hackathon) {
       return res.status(404).json({
         success: false,
-        message:
-          "Hackathon not found or you are not authorized",
+        message: "Hackathon not found or you are not authorized",
       });
     }
 
-    // --------------------------------------------------
-    // Get rounds
-    // --------------------------------------------------
-
+    // Return rounds in ascending order.
     const rounds = await Round.find({
       hackathon: hackathonId,
     }).sort({
@@ -298,25 +273,69 @@ const getRounds = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message:
-        "Server error while fetching rounds",
+      message: "Server error while fetching rounds",
+      error: error.message,
     });
   }
 };
 
+// ======================================================
+// GET PUBLISHED HACKATHON ROUNDS FOR PARTICIPANTS
+// GET /rounds/public/:publicId
+// ======================================================
+
+const getPublicRounds = async (req, res) => {
+  try {
+    const publicId = String(req.params.publicId || "")
+      .trim()
+      .toUpperCase();
+
+    if (!publicId) {
+      return res.status(400).json({
+        success: false,
+        message: "Hackathon ID is required",
+      });
+    }
+
+    const hackathon = await Hackathon.findOne({
+      hackathonId: publicId,
+      isPublished: true,
+    }).select("_id");
+
+    if (!hackathon) {
+      return res.status(404).json({
+        success: false,
+        message: "Published hackathon not found",
+      });
+    }
+
+    const rounds = await Round.find({ hackathon: hackathon._id })
+      .select("name description roundNumber startDate endDate status")
+      .sort({ roundNumber: 1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      rounds,
+    });
+  } catch (error) {
+    console.error("Get public rounds error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching evaluation rounds",
+    });
+  }
+};
 
 // ======================================================
 // UPDATE ROUND
-// Organizer only
 // PUT /rounds/:hackathonId/:roundId
+// Organizer only
 // ======================================================
 
 const updateRound = async (req, res) => {
   try {
-    const {
-      hackathonId,
-      roundId,
-    } = req.params;
+    const { hackathonId, roundId } = req.params;
 
     const {
       name,
@@ -326,15 +345,10 @@ const updateRound = async (req, res) => {
       endDate,
     } = req.body;
 
-    // --------------------------------------------------
-    // Validate IDs
-    // --------------------------------------------------
-
     if (!hackathonId || !roundId) {
       return res.status(400).json({
         success: false,
-        message:
-          "Hackathon ID and round ID are required",
+        message: "Hackathon ID and round ID are required",
       });
     }
 
@@ -344,14 +358,9 @@ const updateRound = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid hackathon ID or round ID",
+        message: "Invalid hackathon ID or round ID",
       });
     }
-
-    // --------------------------------------------------
-    // Validate required fields
-    // --------------------------------------------------
 
     if (
       !name ||
@@ -367,10 +376,6 @@ const updateRound = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
-    // Validate round number
-    // --------------------------------------------------
-
     const parsedRoundNumber = Number(roundNumber);
 
     if (
@@ -379,32 +384,33 @@ const updateRound = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Round number must be a positive integer",
+        message: "Round number must be a positive integer",
       });
     }
 
-    // --------------------------------------------------
-    // Verify hackathon ownership
-    // --------------------------------------------------
+    const organizerId = req.user?.userId;
 
+    if (!organizerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated user ID not found",
+      });
+    }
+
+    // Verify hackathon ownership.
     const hackathon = await Hackathon.findOne({
       _id: hackathonId,
-      organizer: req.user.userId,
+      organizer: organizerId,
     });
 
     if (!hackathon) {
       return res.status(403).json({
         success: false,
-        message:
-          "Hackathon not found or you are not authorized",
+        message: "Hackathon not found or you are not authorized",
       });
     }
 
-    // --------------------------------------------------
-    // Verify round belongs to hackathon
-    // --------------------------------------------------
-
+    // Verify that the round belongs to this hackathon.
     const round = await Round.findOne({
       _id: roundId,
       hackathon: hackathonId,
@@ -417,10 +423,7 @@ const updateRound = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
-    // Validate dates
-    // --------------------------------------------------
-
+    // Validate dates.
     const start = new Date(startDate);
     const end = new Date(endDate);
 
@@ -441,15 +444,11 @@ const updateRound = async (req, res) => {
     if (end <= start) {
       return res.status(400).json({
         success: false,
-        message:
-          "Round end date must be after start date",
+        message: "Round end date must be after start date",
       });
     }
 
-    // --------------------------------------------------
-    // Validate hackathon dates
-    // --------------------------------------------------
-
+    // Ensure the round dates remain inside the hackathon dates.
     const hackathonStart = new Date(hackathon.startDate);
     const hackathonEnd = new Date(hackathon.endDate);
 
@@ -459,39 +458,27 @@ const updateRound = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Round dates must be within the hackathon dates",
+        message: "Round dates must be within the hackathon dates",
       });
     }
 
-    // --------------------------------------------------
-    // Prevent duplicate round numbers
-    // --------------------------------------------------
-
+    // Prevent duplicate round numbers, excluding this round.
     const existingRound = await Round.findOne({
       hackathon: hackathonId,
       roundNumber: parsedRoundNumber,
-      _id: {
-        $ne: roundId,
-      },
+      _id: { $ne: roundId },
     });
 
     if (existingRound) {
       return res.status(409).json({
         success: false,
-        message:
-          "Another round with this round number already exists",
+        message: "Another round with this round number already exists",
       });
     }
 
-    // --------------------------------------------------
-    // Update round
-    // --------------------------------------------------
-
+    // Update the round.
     round.name = name.trim();
-    round.description = description
-      ? description.trim()
-      : "";
+    round.description = description ? description.trim() : "";
     round.roundNumber = parsedRoundNumber;
     round.startDate = start;
     round.endDate = end;
@@ -509,50 +496,39 @@ const updateRound = async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
-        message:
-          "Another round with this round number already exists",
+        message: "Another round with this round number already exists",
       });
     }
 
     if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid hackathon or round ID",
+        message: "Invalid hackathon or round ID",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message:
-        "Server error while updating round",
+      message: "Server error while updating round",
+      error: error.message,
     });
   }
 };
 
-
 // ======================================================
 // DELETE ROUND
-// Organizer only
 // DELETE /rounds/:hackathonId/:roundId
+// Organizer only
 // ======================================================
 
 const deleteRound = async (req, res) => {
   try {
-    const {
-      hackathonId,
-      roundId,
-    } = req.params;
-
-    // --------------------------------------------------
-    // Validate IDs
-    // --------------------------------------------------
+    const { hackathonId, roundId } = req.params;
 
     if (!hackathonId || !roundId) {
       return res.status(400).json({
         success: false,
-        message:
-          "Hackathon ID and round ID are required",
+        message: "Hackathon ID and round ID are required",
       });
     }
 
@@ -562,32 +538,33 @@ const deleteRound = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid hackathon ID or round ID",
+        message: "Invalid hackathon ID or round ID",
       });
     }
 
-    // --------------------------------------------------
-    // Verify organizer owns hackathon
-    // --------------------------------------------------
+    const organizerId = req.user?.userId;
 
+    if (!organizerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated user ID not found",
+      });
+    }
+
+    // Verify hackathon ownership.
     const hackathon = await Hackathon.findOne({
       _id: hackathonId,
-      organizer: req.user.userId,
+      organizer: organizerId,
     });
 
     if (!hackathon) {
       return res.status(403).json({
         success: false,
-        message:
-          "Hackathon not found or you are not authorized",
+        message: "Hackathon not found or you are not authorized",
       });
     }
 
-    // --------------------------------------------------
-    // Verify round belongs to hackathon
-    // --------------------------------------------------
-
+    // Verify the round belongs to the hackathon.
     const round = await Round.findOne({
       _id: roundId,
       hackathon: hackathonId,
@@ -600,18 +577,19 @@ const deleteRound = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
-    // Delete round
-    // --------------------------------------------------
-
     await Round.deleteOne({
       _id: roundId,
       hackathon: hackathonId,
     });
 
+    // Recalculate the flag after deletion.
+    const remainingRounds = await syncRoundsConfigured(hackathon);
+
     return res.status(200).json({
       success: true,
       message: "Round deleted successfully",
+      remainingRounds,
+      roundsConfigured: remainingRounds > 0,
     });
   } catch (error) {
     console.error("Delete round error:", error);
@@ -619,19 +597,17 @@ const deleteRound = async (req, res) => {
     if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid hackathon or round ID",
+        message: "Invalid hackathon or round ID",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message:
-        "Server error while deleting round",
+      message: "Server error while deleting round",
+      error: error.message,
     });
   }
 };
-
 
 // ======================================================
 // EXPORTS
@@ -640,6 +616,7 @@ const deleteRound = async (req, res) => {
 module.exports = {
   createRound,
   getRounds,
+  getPublicRounds,
   updateRound,
   deleteRound,
 };

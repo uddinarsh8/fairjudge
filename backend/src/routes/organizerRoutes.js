@@ -2,6 +2,7 @@ const express = require("express");
 
 const {
   getJudges,
+  createJudgeAccount,
   getHackathonTeams,
   getTeamRequests,
   approveTeam,
@@ -25,6 +26,13 @@ router.get(
   protect,
   authorizeRoles("ORGANIZER"),
   getJudges
+);
+
+router.post(
+  "/judges",
+  protect,
+  authorizeRoles("ORGANIZER"),
+  createJudgeAccount
 );
 
 // ======================================================

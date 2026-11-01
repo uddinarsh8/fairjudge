@@ -33,6 +33,12 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
+    expertise: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     // =====================================================
     // ROLE
     // =====================================================

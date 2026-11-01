@@ -49,6 +49,14 @@ export default function HomePage() {
             <a href="#roles" className="hover:text-white">
               Platform
             </a>
+
+            <button
+              type="button"
+              onClick={() => router.push("/hackathons")}
+              className="hover:text-white"
+            >
+              Hackathons
+            </button>
           </div>
 
           <div className="flex items-center gap-3">

@@ -1,9 +1,177 @@
+const mongoose = require("mongoose");
+
 const EvaluationCriteria = require("../models/EvaluationCriteria");
 const Hackathon = require("../models/Hackathon");
 const Round = require("../models/Round");
 
 // ======================================================
+// CONSTANTS
+// ======================================================
+
+const REQUIRED_LEVELS = [
+  "BEST",
+  "GOOD",
+  "AVERAGE",
+  "POOR",
+  "WORST",
+];
+
+// ======================================================
+// HELPER: VALIDATE SCORING LEVELS
+// ======================================================
+
+const validateScoringLevels = (scoringLevels) => {
+  if (
+    !Array.isArray(scoringLevels) ||
+    scoringLevels.length !== 5
+  ) {
+    return "Exactly 5 scoring levels are required";
+  }
+
+  for (const requiredLevel of REQUIRED_LEVELS) {
+    const level = scoringLevels.find(
+      (item) => item?.name === requiredLevel
+    );
+
+    if (!level) {
+      return `Missing scoring level: ${requiredLevel}`;
+    }
+
+    if (
+      level.score === undefined ||
+      level.score === null ||
+      !Number.isFinite(Number(level.score))
+    ) {
+      return `Invalid score for ${requiredLevel}`;
+    }
+
+    if (
+      typeof level.description !== "string" ||
+      !level.description.trim()
+    ) {
+      return `Description is required for ${requiredLevel}`;
+    }
+  }
+
+  return null;
+};
+
+// ======================================================
+// HELPER: CHECK WHETHER A SAVED CRITERION IS VALID
+// ======================================================
+
+const isValidSavedCriterion = (criterion) => {
+  const weight = Number(criterion.weight);
+  const levels = criterion.scoringLevels;
+
+  if (
+    !Number.isFinite(weight) ||
+    weight <= 0 ||
+    weight > 100
+  ) {
+    return false;
+  }
+
+  if (!Array.isArray(levels) || levels.length !== 5) {
+    return false;
+  }
+
+  return REQUIRED_LEVELS.every((requiredLevel) => {
+    const level = levels.find(
+      (item) => item?.name === requiredLevel
+    );
+
+    return (
+      level &&
+      level.score !== undefined &&
+      level.score !== null &&
+      Number.isFinite(Number(level.score)) &&
+      typeof level.description === "string" &&
+      level.description.trim().length > 0
+    );
+  });
+};
+
+// ======================================================
+// HELPER: SYNCHRONIZE HACKATHON EVALUATION SETUP
+//
+// Evaluation is configured only when:
+// 1. At least one round exists.
+// 2. Every round has at least one criterion.
+// 3. Every round's total criterion weight is 100%.
+// 4. Every criterion has all five valid scoring levels.
+// ======================================================
+
+const syncEvaluationConfigured = async (hackathon) => {
+  const rounds = await Round.find({
+    hackathon: hackathon._id,
+  })
+    .select("_id")
+    .lean();
+
+  let evaluationConfigured = rounds.length > 0;
+
+  if (evaluationConfigured) {
+    const roundCriteria = await Promise.all(
+      rounds.map((round) =>
+        EvaluationCriteria.find({
+          hackathon: hackathon._id,
+          round: round._id,
+        })
+          .select("weight scoringLevels")
+          .lean()
+      )
+    );
+
+    evaluationConfigured = roundCriteria.every(
+      (criteria) => {
+        if (criteria.length === 0) {
+          return false;
+        }
+
+        const totalWeight = criteria.reduce(
+          (total, criterion) =>
+            total + Number(criterion.weight || 0),
+          0
+        );
+
+        const weightIsComplete =
+          Math.abs(totalWeight - 100) < 0.001;
+
+        const allCriteriaAreValid =
+          criteria.every(isValidSavedCriterion);
+
+        return weightIsComplete && allCriteriaAreValid;
+      }
+    );
+  }
+
+  if (!hackathon.setup) {
+    hackathon.setup = {};
+  }
+
+  hackathon.setup.evaluationConfigured =
+    evaluationConfigured;
+
+  await hackathon.save();
+
+  return evaluationConfigured;
+};
+
+// ======================================================
+// HELPER: VALIDATE MONGODB IDS
+// ======================================================
+
+const areValidIds = (...ids) =>
+  ids.every(
+    (id) =>
+      id &&
+      mongoose.Types.ObjectId.isValid(id)
+  );
+
+// ======================================================
 // CREATE CRITERIA
+// POST /criteria
 // ======================================================
 
 const createCriteria = async (req, res) => {
@@ -31,6 +199,25 @@ const createCriteria = async (req, res) => {
       });
     }
 
+    if (
+      !areValidIds(hackathonId, roundId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid hackathon ID or round ID",
+      });
+    }
+
+    if (
+      typeof name !== "string" ||
+      !name.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Criterion name is required",
+      });
+    }
+
     const numericWeight = Number(weight);
 
     if (
@@ -45,64 +232,29 @@ const createCriteria = async (req, res) => {
       });
     }
 
-    if (
-      !Array.isArray(scoringLevels) ||
-      scoringLevels.length !== 5
-    ) {
+    const levelError =
+      validateScoringLevels(scoringLevels);
+
+    if (levelError) {
       return res.status(400).json({
         success: false,
-        message:
-          "Exactly 5 scoring levels are required",
+        message: levelError,
       });
     }
 
-    const requiredLevels = [
-      "BEST",
-      "GOOD",
-      "AVERAGE",
-      "POOR",
-      "WORST",
-    ];
+    const organizerId = req.user?.userId || req.user?.id;
 
-    for (const requiredLevel of requiredLevels) {
-      const level = scoringLevels.find(
-        (item) => item.name === requiredLevel
-      );
-
-      if (!level) {
-        return res.status(400).json({
-          success: false,
-          message:
-            `Missing scoring level: ${requiredLevel}`,
-        });
-      }
-
-      if (
-        level.score === undefined ||
-        !Number.isFinite(Number(level.score))
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            `Invalid score for ${requiredLevel}`,
-        });
-      }
-
-      if (
-        !level.description ||
-        !level.description.trim()
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            `Description is required for ${requiredLevel}`,
-        });
-      }
+    if (!organizerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated user ID not found",
+      });
     }
 
+    // Verify hackathon ownership.
     const hackathon = await Hackathon.findOne({
       _id: hackathonId,
-      organizer: req.user.userId,
+      organizer: organizerId,
     });
 
     if (!hackathon) {
@@ -113,6 +265,7 @@ const createCriteria = async (req, res) => {
       });
     }
 
+    // Verify the round belongs to this hackathon.
     const round = await Round.findOne({
       _id: roundId,
       hackathon: hackathonId,
@@ -125,6 +278,7 @@ const createCriteria = async (req, res) => {
       });
     }
 
+    // Prevent duplicate criterion names within a round.
     const existingCriteria =
       await EvaluationCriteria.findOne({
         hackathon: hackathonId,
@@ -140,6 +294,7 @@ const createCriteria = async (req, res) => {
       });
     }
 
+    // Calculate existing weights.
     const existingCriteriaList =
       await EvaluationCriteria.find({
         hackathon: hackathonId,
@@ -164,22 +319,29 @@ const createCriteria = async (req, res) => {
       });
     }
 
+    // Save criterion.
     const criterion =
       await EvaluationCriteria.create({
         hackathon: hackathonId,
         round: roundId,
         name: name.trim(),
-        description: description || "",
+        description:
+          typeof description === "string"
+            ? description.trim()
+            : "",
         weight: numericWeight,
         scoringLevels: scoringLevels.map(
           (level) => ({
             name: level.name,
             score: Number(level.score),
-            description:
-              level.description.trim(),
+            description: level.description.trim(),
           })
         ),
       });
+
+    // Recalculate evaluation readiness across all rounds.
+    const evaluationConfigured =
+      await syncEvaluationConfigured(hackathon);
 
     return res.status(201).json({
       success: true,
@@ -187,14 +349,14 @@ const createCriteria = async (req, res) => {
         "Evaluation criterion created successfully",
       criterion,
       totalWeight: newTotalWeight,
-      remainingWeight:
-        100 - newTotalWeight,
+      remainingWeight: Math.max(
+        0,
+        100 - newTotalWeight
+      ),
+      evaluationConfigured,
     });
   } catch (error) {
-    console.error(
-      "Create criteria error:",
-      error
-    );
+    console.error("Create criteria error:", error);
 
     if (error.code === 11000) {
       return res.status(409).json({
@@ -204,16 +366,25 @@ const createCriteria = async (req, res) => {
       });
     }
 
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid hackathon or round ID",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message:
         "Server error while creating evaluation criterion",
+      error: error.message,
     });
   }
 };
 
 // ======================================================
 // GET CRITERIA
+// GET /criteria/:hackathonId/:roundId
 // ======================================================
 
 const getCriteria = async (req, res) => {
@@ -223,9 +394,25 @@ const getCriteria = async (req, res) => {
       roundId,
     } = req.params;
 
+    if (!areValidIds(hackathonId, roundId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid hackathon ID or round ID",
+      });
+    }
+
+    const organizerId = req.user?.userId || req.user?.id;
+
+    if (!organizerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated user ID not found",
+      });
+    }
+
     const hackathon = await Hackathon.findOne({
       _id: hackathonId,
-      organizer: req.user.userId,
+      organizer: organizerId,
     });
 
     if (!hackathon) {
@@ -256,38 +443,54 @@ const getCriteria = async (req, res) => {
         createdAt: 1,
       });
 
-    const totalWeight =
-      criteria.reduce(
-        (total, criterion) =>
-          total + Number(criterion.weight || 0),
-        0
-      );
+    const totalWeight = criteria.reduce(
+      (total, criterion) =>
+        total + Number(criterion.weight || 0),
+      0
+    );
+
+    const isComplete =
+      criteria.length > 0 &&
+      Math.abs(totalWeight - 100) < 0.001 &&
+      criteria.every(isValidSavedCriterion);
+
+    // Synchronize the stored setup flag.
+    const evaluationConfigured =
+      await syncEvaluationConfigured(hackathon);
 
     return res.status(200).json({
       success: true,
       criteria,
       totalWeight,
-      remainingWeight:
-        Math.max(0, 100 - totalWeight),
-      isComplete:
-        Math.abs(totalWeight - 100) < 0.001,
+      remainingWeight: Math.max(
+        0,
+        100 - totalWeight
+      ),
+      isComplete,
+      evaluationConfigured,
     });
   } catch (error) {
-    console.error(
-      "Get criteria error:",
-      error
-    );
+    console.error("Get criteria error:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid hackathon or round ID",
+      });
+    }
 
     return res.status(500).json({
       success: false,
       message:
         "Server error while fetching criteria",
+      error: error.message,
     });
   }
 };
 
 // ======================================================
 // UPDATE CRITERIA
+// PUT /criteria/:hackathonId/:roundId/:criteriaId
 // ======================================================
 
 const updateCriteria = async (req, res) => {
@@ -305,9 +508,32 @@ const updateCriteria = async (req, res) => {
       scoringLevels,
     } = req.body;
 
+    if (
+      !areValidIds(
+        hackathonId,
+        roundId,
+        criteriaId
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid hackathon, round or criterion ID",
+      });
+    }
+
+    const organizerId = req.user?.userId || req.user?.id;
+
+    if (!organizerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated user ID not found",
+      });
+    }
+
     const hackathon = await Hackathon.findOne({
       _id: hackathonId,
-      organizer: req.user.userId,
+      organizer: organizerId,
     });
 
     if (!hackathon) {
@@ -345,11 +571,13 @@ const updateCriteria = async (req, res) => {
       });
     }
 
-    if (!name || !name.trim()) {
+    if (
+      typeof name !== "string" ||
+      !name.trim()
+    ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Criterion name is required",
+        message: "Criterion name is required",
       });
     }
 
@@ -367,60 +595,14 @@ const updateCriteria = async (req, res) => {
       });
     }
 
-    if (
-      !Array.isArray(scoringLevels) ||
-      scoringLevels.length !== 5
-    ) {
+    const levelError =
+      validateScoringLevels(scoringLevels);
+
+    if (levelError) {
       return res.status(400).json({
         success: false,
-        message:
-          "Exactly 5 scoring levels are required",
+        message: levelError,
       });
-    }
-
-    const requiredLevels = [
-      "BEST",
-      "GOOD",
-      "AVERAGE",
-      "POOR",
-      "WORST",
-    ];
-
-    for (const requiredLevel of requiredLevels) {
-      const level = scoringLevels.find(
-        (item) =>
-          item.name === requiredLevel
-      );
-
-      if (!level) {
-        return res.status(400).json({
-          success: false,
-          message:
-            `Missing scoring level: ${requiredLevel}`,
-        });
-      }
-
-      if (
-        level.score === undefined ||
-        !Number.isFinite(Number(level.score))
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            `Invalid score for ${requiredLevel}`,
-        });
-      }
-
-      if (
-        !level.description ||
-        !level.description.trim()
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            `Description is required for ${requiredLevel}`,
-        });
-      }
     }
 
     const duplicate =
@@ -470,46 +652,66 @@ const updateCriteria = async (req, res) => {
 
     criterion.name = name.trim();
     criterion.description =
-      description || "";
-    criterion.weight =
-      numericWeight;
+      typeof description === "string"
+        ? description.trim()
+        : "";
+    criterion.weight = numericWeight;
 
     criterion.scoringLevels =
       scoringLevels.map((level) => ({
         name: level.name,
         score: Number(level.score),
-        description:
-          level.description.trim(),
+        description: level.description.trim(),
       }));
 
     await criterion.save();
+
+    const evaluationConfigured =
+      await syncEvaluationConfigured(hackathon);
 
     return res.status(200).json({
       success: true,
       message:
         "Evaluation criterion updated successfully",
       criterion,
-      totalWeight:
-        newTotalWeight,
-      remainingWeight:
-        100 - newTotalWeight,
+      totalWeight: newTotalWeight,
+      remainingWeight: Math.max(
+        0,
+        100 - newTotalWeight
+      ),
+      evaluationConfigured,
     });
   } catch (error) {
-    console.error(
-      "Update criteria error:",
-      error
-    );
+    console.error("Update criteria error:", error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "A criterion with this name already exists in this round",
+      });
+    }
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid hackathon, round or criterion ID",
+      });
+    }
 
     return res.status(500).json({
       success: false,
       message:
         "Server error while updating evaluation criterion",
+      error: error.message,
     });
   }
 };
 
 // ======================================================
 // DELETE CRITERIA
+// DELETE /criteria/:hackathonId/:roundId/:criteriaId
 // ======================================================
 
 const deleteCriteria = async (req, res) => {
@@ -520,9 +722,32 @@ const deleteCriteria = async (req, res) => {
       criteriaId,
     } = req.params;
 
+    if (
+      !areValidIds(
+        hackathonId,
+        roundId,
+        criteriaId
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid hackathon, round or criterion ID",
+      });
+    }
+
+    const organizerId = req.user?.userId || req.user?.id;
+
+    if (!organizerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated user ID not found",
+      });
+    }
+
     const hackathon = await Hackathon.findOne({
       _id: hackathonId,
-      organizer: req.user.userId,
+      organizer: organizerId,
     });
 
     if (!hackathon) {
@@ -533,7 +758,6 @@ const deleteCriteria = async (req, res) => {
       });
     }
 
-    // Verify round belongs to hackathon
     const round = await Round.findOne({
       _id: roundId,
       hackathon: hackathonId,
@@ -563,6 +787,7 @@ const deleteCriteria = async (req, res) => {
 
     await criterion.deleteOne();
 
+    // Recalculate the total weight for this round.
     const remainingCriteria =
       await EvaluationCriteria.find({
         hackathon: hackathonId,
@@ -576,24 +801,37 @@ const deleteCriteria = async (req, res) => {
         0
       );
 
+    // Deleting a criterion may make evaluation incomplete.
+    const evaluationConfigured =
+      await syncEvaluationConfigured(hackathon);
+
     return res.status(200).json({
       success: true,
       message:
         "Evaluation criterion deleted successfully",
       totalWeight,
-      remainingWeight:
-        Math.max(0, 100 - totalWeight),
+      remainingWeight: Math.max(
+        0,
+        100 - totalWeight
+      ),
+      evaluationConfigured,
     });
   } catch (error) {
-    console.error(
-      "Delete criteria error:",
-      error
-    );
+    console.error("Delete criteria error:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid hackathon, round or criterion ID",
+      });
+    }
 
     return res.status(500).json({
       success: false,
       message:
         "Server error while deleting evaluation criterion",
+      error: error.message,
     });
   }
 };

@@ -7,7 +7,9 @@ const {
   updateHackathon,
   deleteHackathon,
   publishHackathon,
+  getPublicHackathons,
   getHackathonByPublicId,
+  startEvaluation,
 } = require("../controllers/hackathonController");
 
 const protect = require("../middleware/authMiddleware");
@@ -47,6 +49,8 @@ router.get(
 // This route is intentionally available before /:id.
 // ======================================================
 
+router.get("/public", getPublicHackathons);
+
 router.get(
   "/public/:publicId",
   getHackathonByPublicId
@@ -57,7 +61,7 @@ router.get(
 // POST /api/hackathons/:id/publish
 //
 // Only the organizer who owns the hackathon can publish it.
-// Backend will verify that required configuration is complete.
+// Rounds and scoring criteria can be configured after publishing.
 // ======================================================
 
 router.post(
@@ -102,7 +106,13 @@ router.delete(
   authorizeRoles("ORGANIZER"),
   deleteHackathon
 );
-
+// POST /api/hackathons/:id/start-evaluation
+router.post(
+  "/:id/start-evaluation",
+  protect,
+  authorizeRoles("ORGANIZER"),
+  startEvaluation
+);
 // ======================================================
 // EXPORT
 // ======================================================

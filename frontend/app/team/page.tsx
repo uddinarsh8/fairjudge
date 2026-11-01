@@ -126,6 +126,18 @@ type Hackathon = {
   status?: string;
 
   isPublished?: boolean;
+  minTeamSize?: number;
+  maxTeamSize?: number;
+};
+
+type EvaluationRound = {
+  _id: string;
+  name: string;
+  roundNumber: number;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  status: string;
 };
 
 type ProjectForm = {
@@ -185,6 +197,9 @@ export default function TeamDashboard() {
 
   const [hackathonLoading, setHackathonLoading] =
     useState(false);
+
+  const [evaluationRounds, setEvaluationRounds] =
+    useState<EvaluationRound[]>([]);
 
   // ===================================================
   // CHANGE HACKATHON
@@ -377,6 +392,38 @@ export default function TeamDashboard() {
       };
 
     loadHackathon();
+  }, [hackathonId]);
+
+  useEffect(() => {
+    const publicId = hackathonId.trim().toUpperCase();
+    if (!publicId) {
+      queueMicrotask(() => setEvaluationRounds([]));
+      return;
+    }
+
+    let active = true;
+    const loadEvaluationRounds = async () => {
+      try {
+        const response = await apiRequest(
+          `/rounds/public/${encodeURIComponent(publicId)}`
+        );
+        if (active) {
+          setEvaluationRounds(
+            Array.isArray(response?.rounds) ? response.rounds : []
+          );
+        }
+      } catch {
+        if (active) setEvaluationRounds([]);
+      }
+    };
+
+    queueMicrotask(() => {
+      void loadEvaluationRounds();
+    });
+
+    return () => {
+      active = false;
+    };
   }, [hackathonId]);
 
   // ===================================================
@@ -695,6 +742,25 @@ export default function TeamDashboard() {
         return;
       }
 
+      const validMembers = members.filter(
+        (member) => member.name.trim() && member.email.trim()
+      );
+      const totalTeamSize = validMembers.length + 1;
+      const minimumTeamSize = Number(hackathon.minTeamSize ?? 1);
+      const maximumTeamSize = Number(hackathon.maxTeamSize ?? 5);
+
+      if (totalTeamSize < minimumTeamSize) {
+        setMessage(`This hackathon requires at least ${minimumTeamSize} team member${minimumTeamSize === 1 ? "" : "s"}, including you.`);
+        setMessageType("error");
+        return;
+      }
+
+      if (totalTeamSize > maximumTeamSize) {
+        setMessage(`This hackathon allows up to ${maximumTeamSize} team members, including you.`);
+        setMessageType("error");
+        return;
+      }
+
       setTeamActionLoading(
         true
       );
@@ -716,13 +782,7 @@ export default function TeamDashboard() {
                   teamName.trim(),
 
                 members:
-                  members
-                    .filter(
-                      (member) =>
-                        member.name.trim() &&
-                        member.email.trim()
-                    )
-                    .map(
+                  validMembers.map(
                       (member) => ({
                         name:
                           member.name.trim(),
@@ -2841,31 +2901,46 @@ export default function TeamDashboard() {
 
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-
-              <RoundCard
-                number="01"
-                title="Round 1"
-                status={
-                  project
-                    ? "Evaluation pending"
-                    : "Waiting for project"
-                }
-              />
-
-              <RoundCard
-                number="02"
-                title="Round 2"
-                status="Not started"
-              />
-
-              <RoundCard
-                number="03"
-                title="Final Result"
-                status="Not released"
-              />
-
-            </div>
+            {evaluationRounds.length > 0 ? (
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                {evaluationRounds.map((round) => (
+                  <article
+                    key={round._id}
+                    className="rounded-xl border border-slate-800 bg-slate-950 p-5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-blue-400">
+                          Round {round.roundNumber}
+                        </p>
+                        <h3 className="mt-1 font-semibold">{round.name}</h3>
+                      </div>
+                      <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-300">
+                        {round.status.toLowerCase()}
+                      </span>
+                    </div>
+                    {round.description && (
+                      <p className="mt-3 text-sm leading-6 text-slate-400">
+                        {round.description}
+                      </p>
+                    )}
+                    <div className="mt-4 border-t border-slate-800 pt-3 text-xs leading-5 text-slate-400">
+                      <p>Starts: {new Date(round.startDate).toLocaleString()}</p>
+                      <p>Ends: {new Date(round.endDate).toLocaleString()}</p>
+                    </div>
+                    {!project && (
+                      <p className="mt-3 text-xs text-slate-500">
+                        Submit your project to take part in this round.
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-6 rounded-xl border border-dashed border-slate-700 bg-slate-950/50 p-6 text-sm text-slate-400">
+                The organizer has not published an evaluation schedule yet. Check back here after rounds are added.
+              </div>
+            )}
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
 
@@ -3188,8 +3263,7 @@ export default function TeamDashboard() {
                     </p>
 
                     <p className="mt-1 text-xs text-slate-500">
-                      Optional. Teammates can join later
-                      using the Team ID.
+                      {`Team size: ${hackathon?.minTeamSize ?? 1}–${hackathon?.maxTeamSize ?? 5} members including you. Teammates can also join later using the Team ID.`}
                     </p>
 
                   </div>
@@ -3200,9 +3274,10 @@ export default function TeamDashboard() {
                       addMember
                     }
                     disabled={
-                      teamActionLoading
+                      teamActionLoading ||
+                      members.length >= Math.max(0, Number(hackathon?.maxTeamSize ?? 5) - 1)
                     }
-                    className="text-sm font-medium text-blue-400 hover:text-blue-300"
+                    className="text-sm font-medium text-blue-400 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     + Add Member
                   </button>
@@ -3846,7 +3921,6 @@ export default function TeamDashboard() {
     </main>
   );
 }
-
 // =====================================================
 // STATUS CARD
 // =====================================================
@@ -3889,55 +3963,6 @@ function StatusCard({
       <p className="mt-2 text-[11px] leading-5 text-slate-600">
         {description}
       </p>
-
-    </div>
-  );
-}
-
-// =====================================================
-// ROUND CARD
-// =====================================================
-
-function RoundCard({
-  number,
-  title,
-  status,
-}: {
-  number: string;
-  title: string;
-  status: string;
-}) {
-  return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950 p-5">
-
-      <div className="flex items-start justify-between gap-3">
-
-        <div className="flex items-center gap-3">
-
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-xs font-bold text-blue-400">
-            {number}
-          </div>
-
-          <div>
-
-            <p className="font-semibold">
-              {title}
-            </p>
-
-            <p className="mt-1 text-xs text-slate-500">
-              {status}
-            </p>
-
-          </div>
-
-        </div>
-
-        <ClipboardCheck
-          size={17}
-          className="text-slate-700"
-        />
-
-      </div>
 
     </div>
   );

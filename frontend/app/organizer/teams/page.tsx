@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users,
@@ -115,36 +115,15 @@ export default function OrganizerTeamsPage() {
   // LOAD TEAMS
   // ====================================================
 
-  useEffect(() => {
-    if (
-      loading ||
-      !user ||
-      !token
-    ) {
-      return;
-    }
-
-    const role = String(
-      user.role || ""
-    ).toUpperCase();
-
-    if (role !== "ORGANIZER") {
-      return;
-    }
-
-    loadTeams();
-  }, [loading, user, token]);
-
   // ====================================================
   // FETCH ORGANIZER HACKATHONS
   // THEN FETCH TEAMS FOR EACH HACKATHON
   // ====================================================
 
-  const loadTeams = async () => {
-    try {
-      setLoadingTeams(true);
-      setError("");
+  const loadTeams = useCallback(async () => {
+    if (!token) return;
 
+    try {
       // ----------------------------------------------
       // GET ORGANIZER HACKATHONS
       // ----------------------------------------------
@@ -154,7 +133,7 @@ export default function OrganizerTeamsPage() {
           "/hackathons/organizer",
           {
             method: "GET",
-            token,
+            token: token ?? undefined,
           }
         );
 
@@ -209,7 +188,7 @@ export default function OrganizerTeamsPage() {
                     )}`,
                     {
                       method: "GET",
-                      token,
+                      token: token ?? undefined,
                     }
                   );
 
@@ -264,50 +243,31 @@ export default function OrganizerTeamsPage() {
         teamResults.flat();
 
       setTeams(allTeams);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(
         "Failed to load organizer teams:",
         err
       );
 
       setError(
-        err?.message ||
+        (err instanceof Error ? err.message : "") ||
           "Failed to load teams."
       );
     } finally {
       setLoadingTeams(false);
     }
-  };
+  }, [token]);
 
-  // ====================================================
-  // FORMAT DATE
-  // ====================================================
+  useEffect(() => {
+    if (loading || !user || !token) return;
 
-  const formatDate = (
-    date?: string
-  ) => {
-    if (!date) return "-";
+    const role = String(user.role || "").toUpperCase();
+    if (role !== "ORGANIZER") return;
 
-    const parsed =
-      new Date(date);
-
-    if (
-      Number.isNaN(
-        parsed.getTime()
-      )
-    ) {
-      return "-";
-    }
-
-    return parsed.toLocaleDateString(
-      "en-IN",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }
-    );
-  };
+    queueMicrotask(() => {
+      void loadTeams();
+    });
+  }, [loading, user, token, loadTeams]);
 
   // ====================================================
   // TEAM STATUS
@@ -496,7 +456,11 @@ export default function OrganizerTeamsPage() {
             </div>
 
             <button
-              onClick={loadTeams}
+              onClick={() => {
+                setError("");
+                setLoadingTeams(true);
+                void loadTeams();
+              }}
               disabled={
                 loadingTeams
               }

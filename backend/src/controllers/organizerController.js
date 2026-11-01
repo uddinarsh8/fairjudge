@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const Team = require("../models/Team");
 const Hackathon = require("../models/Hackathon");
 const User = require("../models/User");
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const { sendJudgeCredentials } = require("../services/emailService");
 
 // ======================================================
 // OPTIONAL ROUND MODEL
@@ -38,6 +41,148 @@ const isValidObjectId = (id) => {
   return mongoose.Types.ObjectId.isValid(id);
 };
 
+const generateJudgePassword = () => {
+  const characterGroups = [
+    "ABCDEFGHJKLMNPQRSTUVWXYZ",
+    "abcdefghijkmnopqrstuvwxyz",
+    "23456789",
+    "!@#$%&*",
+  ];
+  const allCharacters = characterGroups.join("");
+  const passwordCharacters = characterGroups.map(
+    (group) => group[crypto.randomInt(group.length)]
+  );
+
+  while (passwordCharacters.length < 8) {
+    passwordCharacters.push(
+      allCharacters[crypto.randomInt(allCharacters.length)]
+    );
+  }
+
+  for (let index = passwordCharacters.length - 1; index > 0; index -= 1) {
+    const swapIndex = crypto.randomInt(index + 1);
+    [passwordCharacters[index], passwordCharacters[swapIndex]] = [
+      passwordCharacters[swapIndex],
+      passwordCharacters[index],
+    ];
+  }
+
+  return passwordCharacters.join("");
+};
+
+const createJudgeAccount = async (req, res) => {
+  let judge;
+
+  try {
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    const expertise = typeof req.body?.expertise === "string" ? req.body.expertise.trim() : "";
+
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "Judge name and email are required",
+      });
+    }
+
+    if (name.length > 120 || email.length > 254 || expertise.length > 300) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email, or expertise exceeds the allowed length",
+      });
+    }
+
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!validEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a valid email address",
+      });
+    }
+
+    const existingUser = await User.findOne({ email }).select("role");
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: existingUser.role === "JUDGE"
+          ? "A judge account already exists for this email"
+          : "An account already exists for this email",
+      });
+    }
+
+    // Compare against existing judge hashes so generated passwords are unique
+    // among judge accounts without storing any plaintext password.
+    const existingJudgeHashes = await User.find({ role: "JUDGE" }).select("password");
+    let temporaryPassword;
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const candidate = generateJudgePassword();
+      let alreadyUsed = false;
+      for (const existingJudge of existingJudgeHashes) {
+        if (await bcrypt.compare(candidate, existingJudge.password)) {
+          alreadyUsed = true;
+          break;
+        }
+      }
+      if (!alreadyUsed) {
+        temporaryPassword = candidate;
+        break;
+      }
+    }
+
+    if (!temporaryPassword) {
+      return res.status(503).json({
+        success: false,
+        message: "Could not generate a unique judge password. Please try again.",
+      });
+    }
+
+    judge = await User.create({
+      name,
+      email,
+      expertise,
+      password: await bcrypt.hash(temporaryPassword, 12),
+      role: "JUDGE",
+    });
+
+    try {
+      await sendJudgeCredentials({
+        name: judge.name,
+        email: judge.email,
+        password: temporaryPassword,
+      });
+    } catch (emailError) {
+      await User.deleteOne({ _id: judge._id });
+      judge = null;
+      console.error("Judge credentials email failed:", emailError.message);
+      return res.status(503).json({
+        success: false,
+        message: "Could not send the judge login email. The account was not created. Check SMTP configuration and try again.",
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: `Judge login details sent to ${email}`,
+      judge: {
+        _id: judge._id,
+        name: judge.name,
+        email: judge.email,
+        expertise: judge.expertise,
+        role: judge.role,
+        createdAt: judge.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("Create judge account error:", error);
+    return res.status(error.code === 11000 ? 409 : 500).json({
+      success: false,
+      message: error.code === 11000
+        ? "An account already exists for this email"
+        : "Failed to create judge account",
+    });
+  }
+};
+
 // ======================================================
 // GET ALL JUDGES
 // GET /api/organizer/judges
@@ -57,7 +202,7 @@ const getJudges = async (req, res) => {
     const judges = await User.find({
       role: "JUDGE",
     })
-      .select("name email role createdAt")
+      .select("name email expertise role createdAt")
       .sort({
         createdAt: -1,
       });
@@ -831,6 +976,7 @@ const getHackathonStats = async (
 
 module.exports = {
   getJudges,
+  createJudgeAccount,
   getHackathonTeams,
   getTeamRequests,
   approveTeam,

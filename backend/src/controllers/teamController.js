@@ -422,6 +422,23 @@ const createTeam = async (
       }
     }
 
+    const minTeamSize = Number(hackathonExists.minTeamSize ?? 1);
+    const maxTeamSize = Number(hackathonExists.maxTeamSize ?? 5);
+
+    if (teamMembers.length < minTeamSize) {
+      return res.status(400).json({
+        success: false,
+        message: `This hackathon requires teams to have at least ${minTeamSize} member${minTeamSize === 1 ? "" : "s"}, including the team leader.`,
+      });
+    }
+
+    if (teamMembers.length > maxTeamSize) {
+      return res.status(400).json({
+        success: false,
+        message: `This hackathon allows up to ${maxTeamSize} members per team, including the team leader.`,
+      });
+    }
+
     // ==================================================
     // GENERATE UNIQUE TEAM ID
     // ==================================================
@@ -854,6 +871,14 @@ const joinTeam = async (
         success: false,
         message:
           "You are already listed as a member of this team.",
+      });
+    }
+
+    const maxTeamSize = Number(hackathonExists.maxTeamSize ?? 5);
+    if (team.members.length >= maxTeamSize) {
+      return res.status(400).json({
+        success: false,
+        message: `This team has reached the ${maxTeamSize}-member limit for this hackathon.`,
       });
     }
 

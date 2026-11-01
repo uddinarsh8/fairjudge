@@ -20,6 +20,11 @@ type Team = {
   createdAt?: string;
 };
 
+type HackathonRules = {
+  minTeamSize?: number;
+  maxTeamSize?: number;
+};
+
 export default function CreateTeamPage() {
   const router = useRouter();
   const { token, loading } = useAuth();
@@ -41,6 +46,7 @@ export default function CreateTeamPage() {
   ]);
 
   const [team, setTeam] = useState<Team | null>(null);
+  const [hackathonRules, setHackathonRules] = useState<HackathonRules | null>(null);
 
   const [checkingTeam, setCheckingTeam] = useState(false);
 
@@ -62,6 +68,35 @@ export default function CreateTeamPage() {
       setHackathonId(storedHackathon);
     }
   }, []);
+
+  useEffect(() => {
+    if (!hackathonId.trim()) {
+      queueMicrotask(() => setHackathonRules(null));
+      return;
+    }
+
+    let active = true;
+    const loadHackathonRules = async () => {
+      try {
+        const response = await apiRequest(
+          `/hackathons/public/${encodeURIComponent(hackathonId.trim())}`
+        );
+        if (active) {
+          setHackathonRules(response?.hackathon || null);
+        }
+      } catch {
+        if (active) setHackathonRules(null);
+      }
+    };
+
+    queueMicrotask(() => {
+      void loadHackathonRules();
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [hackathonId]);
 
   // ======================================================
   // CHECK EXISTING TEAM
@@ -313,11 +348,17 @@ export default function CreateTeamPage() {
           member.email.trim()
       );
 
-    if (validMembers.length === 0) {
-      setError(
-        "Please add at least one team member."
-      );
+    const totalTeamSize = validMembers.length + 1;
+    const minimumTeamSize = Number(hackathonRules?.minTeamSize ?? 1);
+    const maximumTeamSize = Number(hackathonRules?.maxTeamSize ?? 5);
 
+    if (totalTeamSize < minimumTeamSize) {
+      setError(`This hackathon requires at least ${minimumTeamSize} team member${minimumTeamSize === 1 ? "" : "s"}, including the team leader.`);
+      return;
+    }
+
+    if (totalTeamSize > maximumTeamSize) {
+      setError(`This hackathon allows up to ${maximumTeamSize} team members, including the team leader.`);
       return;
     }
 
@@ -620,14 +661,15 @@ export default function CreateTeamPage() {
                   </h2>
 
                   <p className="text-sm text-gray-400">
-                    Add the members of your team.
+                    {`Team size: ${hackathonRules?.minTeamSize ?? 1} to ${hackathonRules?.maxTeamSize ?? 5} members including the team leader.`}
                   </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={addMember}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+                  disabled={members.length >= Math.max(0, Number(hackathonRules?.maxTeamSize ?? 5) - 1)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   + Add Member
                 </button>

@@ -19,10 +19,10 @@ const getHackathonLeaderboard = async (req, res) => {
       });
     }
 
-    // Only LOCKED evaluations are considered
+    // The evaluation flow stores completed judge scores as SUBMITTED.
     const evaluations = await Evaluation.find({
       hackathon: hackathonId,
-      status: "LOCKED",
+      status: "SUBMITTED",
     })
       .populate("team", "name")
       .populate("project", "projectName")
@@ -33,12 +33,16 @@ const getHackathonLeaderboard = async (req, res) => {
     const teamMap = new Map();
 
     for (const evaluation of evaluations) {
+      if (!evaluation.team) continue;
+
       const teamId = evaluation.team._id.toString();
 
       if (!teamMap.has(teamId)) {
         teamMap.set(teamId, {
-          teamId,
-          teamName: evaluation.team.name,
+          team: {
+            _id: evaluation.team._id,
+            name: evaluation.team.name,
+          },
           projectId: evaluation.project?._id,
           projectName:
             evaluation.project?.projectName || "",
@@ -50,17 +54,15 @@ const getHackathonLeaderboard = async (req, res) => {
 
       const team = teamMap.get(teamId);
 
-      team.totalScore += evaluation.totalScore;
+      team.totalScore += Number(evaluation.finalScore || 0);
       team.evaluationCount += 1;
 
       team.evaluations.push({
         evaluationId: evaluation._id,
         judge: evaluation.judge,
         round: evaluation.round,
-        score: evaluation.totalScore,
-        submittedAt: evaluation.submittedAt,
-        integrityHash:
-          evaluation.integrityHash,
+        score: Number(evaluation.finalScore || 0),
+        submittedAt: evaluation.createdAt,
       });
     }
 
@@ -69,6 +71,7 @@ const getHackathonLeaderboard = async (req, res) => {
       teamMap.values()
     ).map((team) => ({
       ...team,
+      totalEvaluations: team.evaluationCount,
       averageScore:
         team.evaluationCount > 0
           ? Number(

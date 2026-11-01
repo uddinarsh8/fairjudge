@@ -5,6 +5,77 @@ const EvaluationCriteria = require(
 );
 const Round = require("../models/Round");
 
+const getEvaluationData = async (req, res) => {
+  try {
+    const assignment = await JudgeAssignment.findOne({
+      _id: req.params.assignmentId,
+      judge: req.user.userId,
+    })
+      .populate("team", "name")
+      .populate(
+        "project",
+        "projectName problemStatement solution technologyStack githubUrl demoUrl presentationUrl"
+      )
+      .populate("round", "name roundNumber status")
+      .populate("hackathon", "name status");
+
+    if (!assignment) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Assignment not found or you are not authorized to evaluate it",
+      });
+    }
+
+    if (!assignment.project) {
+      return res.status(400).json({
+        success: false,
+        message: "This team has not submitted a project yet",
+      });
+    }
+
+    if (!assignment.team) {
+      return res.status(404).json({
+        success: false,
+        message: "The team linked to this assignment could not be found. Ask the organizer to update the assignment.",
+      });
+    }
+
+    if (!assignment.round || !assignment.hackathon) {
+      return res.status(404).json({
+        success: false,
+        message: "This assignment is missing its round or hackathon. Ask the organizer to update the assignment.",
+      });
+    }
+
+    const criteria = await EvaluationCriteria.find({
+      hackathon: assignment.hackathon._id,
+      round: assignment.round._id,
+    }).sort({ createdAt: 1 });
+
+    const evaluation = await Evaluation.findOne({
+      assignment: assignment._id,
+      judge: req.user.userId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      assignment,
+      criteria,
+      evaluation,
+    });
+  } catch (error) {
+    console.error("Get evaluation data error:", error);
+    return res.status(error.name === "CastError" ? 400 : 500).json({
+      success: false,
+      message:
+        error.name === "CastError"
+          ? "Invalid assignment ID"
+          : "Server error while loading evaluation",
+    });
+  }
+};
+
 
 // ======================================================
 // CREATE / SUBMIT EVALUATION
@@ -246,8 +317,22 @@ const submitEvaluation = async (req, res) => {
       // (5 / 5) × 30 = 30
       // ----------------------------------------------
 
+      const maximumScore = Math.max(
+        ...criterion.scoringLevels.map(
+          (level) => Number(level.score)
+        )
+      );
+
+      if (!Number.isFinite(maximumScore) || maximumScore <= 0) {
+        return res.status(400).json({
+          success: false,
+          message:
+            `Scoring levels for ${criterion.name} must include a score greater than zero`,
+        });
+      }
+
       const weightedScore =
-        (numericScore / 5) *
+        (numericScore / maximumScore) *
         Number(criterion.weight);
 
       finalScore +=
@@ -340,6 +425,16 @@ const submitEvaluation = async (req, res) => {
           evaluationStatus,
       });
 
+    if (evaluationStatus === "SUBMITTED") {
+      await JudgeAssignment.updateOne(
+        {
+          _id: assignment._id,
+          judge: req.user.userId,
+        },
+        { $set: { status: "COMPLETED" } }
+      );
+    }
+
     // --------------------------------------------------
     // Return evaluation
     // --------------------------------------------------
@@ -377,5 +472,6 @@ const submitEvaluation = async (req, res) => {
 
 
 module.exports = {
+  getEvaluationData,
   submitEvaluation,
 };

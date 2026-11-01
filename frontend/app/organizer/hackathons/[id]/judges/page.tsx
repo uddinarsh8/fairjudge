@@ -9,6 +9,7 @@ type Judge = {
   _id: string;
   name: string;
   email: string;
+  expertise?: string;
   createdAt?: string;
 };
 
@@ -35,9 +36,8 @@ export default function JudgesPage() {
         setLoading(true);
         setError("");
 
-        // This endpoint may need adjustment based on your backend.
         const response = await apiRequest(
-          `/users/judges`,
+          `/organizer/judges`,
           { token }
         );
 
@@ -233,7 +233,7 @@ export default function JudgesPage() {
 
               <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-400">
                 {judges.length === 0
-                  ? "Users registered with the Judge role will appear here."
+                  ? "Judges created from the organizer dashboard will appear here."
                   : "Try searching with a different name or email."}
               </p>
 
@@ -265,6 +265,12 @@ export default function JudgesPage() {
                   <p className="mt-2 truncate text-sm text-slate-400">
                     {judge.email}
                   </p>
+
+                  {judge.expertise && (
+                    <p className="mt-2 text-xs text-slate-500">
+                      Expertise: {judge.expertise}
+                    </p>
+                  )}
 
                   <div className="mt-6 border-t border-slate-800 pt-5">
 

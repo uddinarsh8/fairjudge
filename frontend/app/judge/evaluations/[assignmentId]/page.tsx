@@ -21,7 +21,7 @@ type Criterion = {
 
 type ScoreInput = {
   criterionId: string;
-  score: number | "";
+  selectedLevel: string;
   feedback: string;
 };
 
@@ -116,9 +116,22 @@ export default function JudgeEvaluationPage() {
             }
           );
 
-        setAssignment(
-          response.assignment
-        );
+        const loadedAssignment = response.assignment as Assignment | null;
+
+        if (
+          !loadedAssignment?.team ||
+          !loadedAssignment.project ||
+          !loadedAssignment.round ||
+          !loadedAssignment.hackathon
+        ) {
+          setAssignment(null);
+          setError(
+            "This assignment is missing its team, project, round, or hackathon data. Ask the organizer to update the assignment."
+          );
+          return;
+        }
+
+        setAssignment(loadedAssignment);
 
         setCriteria(
           response.criteria || []
@@ -136,25 +149,23 @@ export default function JudgeEvaluationPage() {
           setSubmitted(true);
 
           setOverallFeedback(
-            response.evaluation
-              .overallFeedback || ""
+            response.evaluation.overallComment || ""
           );
 
           setScores(
             response.evaluation.scores.map(
               (item: {
-                criterion: string;
-                score: number;
-                feedback: string;
+                criterion: string | { _id: string };
+                selectedLevel: string;
+                comment: string;
               }) => ({
                 criterionId:
                   typeof item.criterion ===
                   "string"
                     ? item.criterion
                     : item.criterion._id,
-                score: item.score,
-                feedback:
-                  item.feedback || "",
+                selectedLevel: item.selectedLevel,
+                feedback: item.comment || "",
               })
             )
           );
@@ -168,7 +179,7 @@ export default function JudgeEvaluationPage() {
               (criterion: Criterion) => ({
                 criterionId:
                   criterion._id,
-                score: "",
+                selectedLevel: "",
                 feedback: "",
               })
             )
@@ -194,7 +205,7 @@ export default function JudgeEvaluationPage() {
 
   const updateScore = (
     criterionId: string,
-    score: number
+    selectedLevel: string
   ) => {
     if (submitted) return;
 
@@ -203,7 +214,7 @@ export default function JudgeEvaluationPage() {
         item.criterionId === criterionId
           ? {
               ...item,
-              score,
+              selectedLevel,
             }
           : item
       )
@@ -249,23 +260,25 @@ export default function JudgeEvaluationPage() {
 
       if (
         !selectedScore ||
-        selectedScore.score === ""
+        selectedScore.selectedLevel === ""
       ) {
         continue;
       }
 
-      const maxScore =
-        Math.max(
-          ...criterion.scoringLevels.map(
-            (level) =>
-              Number(level.score)
-          )
-        );
+      const selectedLevel = criterion.scoringLevels.find(
+        (level) => level.name === selectedScore.selectedLevel
+      );
 
-      total +=
-        (Number(selectedScore.score) /
-          maxScore) *
-        Number(criterion.weight);
+      if (selectedLevel) {
+        const maxScore = Math.max(
+          ...criterion.scoringLevels.map((level) => Number(level.score))
+        );
+        if (maxScore > 0) {
+          total +=
+            (Number(selectedLevel.score) / maxScore) *
+            Number(criterion.weight);
+        }
+      }
     }
 
     return total.toFixed(2);
@@ -294,7 +307,7 @@ export default function JudgeEvaluationPage() {
 
     const incompleteScore =
       scores.find(
-        (item) => item.score === ""
+        (item) => item.selectedLevel === ""
       );
 
     if (incompleteScore) {
@@ -312,24 +325,20 @@ export default function JudgeEvaluationPage() {
 
       const response =
         await apiRequest(
-          `/evaluations/${assignmentId}`,
+          "/evaluations",
           {
             method: "POST",
             token,
 
             body: {
-              scores: scores.map(
-                (item) => ({
-                  criterionId:
-                    item.criterionId,
-                  score:
-                    Number(item.score),
-                  feedback:
-                    item.feedback,
-                })
-              ),
-
-              overallFeedback,
+              assignmentId,
+              scores: scores.map((item) => ({
+                criterionId: item.criterionId,
+                selectedLevel: item.selectedLevel,
+                comment: item.feedback,
+              })),
+              overallComment: overallFeedback,
+              status: "SUBMITTED",
             },
           }
         );
@@ -648,14 +657,12 @@ export default function JudgeEvaluationPage() {
                               onClick={() =>
                                 updateScore(
                                   criterion._id,
-                                  Number(
-                                    level.score
-                                  )
+                                  level.name
                                 )
                               }
                               className={`rounded-xl border p-4 text-left transition ${
-                                currentScore?.score ===
-                                Number(level.score)
+                                currentScore?.selectedLevel ===
+                                level.name
                                   ? "border-blue-500 bg-blue-500/10"
                                   : "border-slate-800 bg-slate-900 hover:border-slate-600"
                               } ${

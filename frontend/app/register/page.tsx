@@ -342,10 +342,6 @@ export default function RegisterPage() {
                     Participant
                   </option>
 
-                  <option value="JUDGE">
-                    Judge
-                  </option>
-
                   <option value="ORGANIZER">
                     Organizer
                   </option>

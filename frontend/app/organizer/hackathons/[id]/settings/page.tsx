@@ -19,6 +19,13 @@ type Hackathon = {
   startDate: string;
   endDate: string;
   status: HackathonStatus;
+  location?: string;
+  mode?: "ONLINE" | "OFFLINE" | "HYBRID";
+  prizePool?: number;
+  registrationFee?: number;
+  registrationFeeType?: "PER_MEMBER" | "PER_TEAM";
+  minTeamSize?: number;
+  maxTeamSize?: number;
 };
 
 export default function HackathonSettingsPage() {
@@ -37,6 +44,14 @@ export default function HackathonSettingsPage() {
 
   const [description, setDescription] =
     useState("");
+
+  const [location, setLocation] = useState("");
+  const [mode, setMode] = useState("ONLINE");
+  const [prizePool, setPrizePool] = useState("0");
+  const [registrationFee, setRegistrationFee] = useState("0");
+  const [registrationFeeType, setRegistrationFeeType] = useState("PER_TEAM");
+  const [minTeamSize, setMinTeamSize] = useState("1");
+  const [maxTeamSize, setMaxTeamSize] = useState("5");
 
   const [startDate, setStartDate] =
     useState("");
@@ -91,6 +106,14 @@ export default function HackathonSettingsPage() {
           data.description || ""
         );
 
+        setLocation(data.location || "");
+        setMode(data.mode || "ONLINE");
+        setPrizePool(String(data.prizePool ?? 0));
+        setRegistrationFee(String(data.registrationFee ?? 0));
+        setRegistrationFeeType(data.registrationFeeType || "PER_TEAM");
+        setMinTeamSize(String(data.minTeamSize ?? 1));
+        setMaxTeamSize(String(data.maxTeamSize ?? 5));
+
         setStartDate(
           data.startDate
             ? new Date(data.startDate)
@@ -140,6 +163,20 @@ export default function HackathonSettingsPage() {
     setError("");
     setSuccess("");
 
+    const minimumSize = Number(minTeamSize);
+    const maximumSize = Number(maxTeamSize);
+    if (
+      !Number.isInteger(minimumSize) ||
+      !Number.isInteger(maximumSize) ||
+      minimumSize < 1 ||
+      maximumSize < minimumSize ||
+      maximumSize > 100
+    ) {
+      setError("Team size must be between 1 and 100, and the maximum must be at least the minimum.");
+      setSaving(false);
+      return;
+    }
+
     try {
       const response =
         await apiRequest(
@@ -153,6 +190,13 @@ export default function HackathonSettingsPage() {
               startDate,
               endDate,
               status,
+              location: location.trim(),
+              mode,
+              prizePool: Number(prizePool || 0),
+              registrationFee: Number(registrationFee || 0),
+              registrationFeeType,
+              minTeamSize: minimumSize,
+              maxTeamSize: maximumSize,
             },
           }
         );
@@ -336,6 +380,119 @@ export default function HackathonSettingsPage() {
                 className="w-full resize-none rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500"
               />
             </div>
+
+            {/* EVENT DETAILS */}
+
+            <section className="rounded-xl border border-slate-800 bg-slate-950/50 p-5">
+              <h2 className="text-lg font-semibold">Event Details</h2>
+              <p className="mt-1 text-sm text-slate-400">
+                These details appear on the public hackathon page.
+              </p>
+
+              <div className="mt-5 grid gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Location
+                  </label>
+                  <input
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                    placeholder="City, venue or online platform"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Event Mode
+                  </label>
+                  <select
+                    value={mode}
+                    onChange={(event) => setMode(event.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
+                  >
+                    <option value="ONLINE">Online</option>
+                    <option value="OFFLINE">Offline</option>
+                    <option value="HYBRID">Hybrid</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Total Prize Pool (INR)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={prizePool}
+                    onChange={(event) => setPrizePool(event.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Registration Fee (INR)
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={registrationFee}
+                      onChange={(event) => setRegistrationFee(event.target.value)}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
+                    />
+                    <select
+                      aria-label="Registration fee charged per"
+                      value={registrationFeeType}
+                      onChange={(event) => setRegistrationFeeType(event.target.value)}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-white outline-none focus:border-blue-500"
+                    >
+                      <option value="PER_TEAM">Per team</option>
+                      <option value="PER_MEMBER">Per member</option>
+                    </select>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">Enter 0 for a free event.</p>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Minimum Team Size
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={maxTeamSize || 100}
+                    step="1"
+                    value={minTeamSize}
+                    onChange={(event) => setMinTeamSize(event.target.value)}
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Maximum Team Size
+                  </label>
+                  <input
+                    type="number"
+                    min={minTeamSize || 1}
+                    max="100"
+                    step="1"
+                    value={maxTeamSize}
+                    onChange={(event) => setMaxTeamSize(event.target.value)}
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-blue-500"
+                  />
+                  <p className="mt-2 text-xs text-slate-500">
+                    Includes the team leader. Set a range from 1 to 100 members.
+                  </p>
+                </div>
+              </div>
+            </section>
 
             {/* DATES */}
 

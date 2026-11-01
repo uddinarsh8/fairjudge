@@ -16,6 +16,13 @@ export default function CreateHackathonPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [mode, setMode] = useState("ONLINE");
+  const [prizePool, setPrizePool] = useState("0");
+  const [registrationFee, setRegistrationFee] = useState("0");
+  const [registrationFeeType, setRegistrationFeeType] = useState("PER_TEAM");
+  const [minTeamSize, setMinTeamSize] = useState("1");
+  const [maxTeamSize, setMaxTeamSize] = useState("5");
 
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -142,6 +149,19 @@ export default function CreateHackathonPage() {
       return;
     }
 
+    const minimumSize = Number(minTeamSize);
+    const maximumSize = Number(maxTeamSize);
+    if (
+      !Number.isInteger(minimumSize) ||
+      !Number.isInteger(maximumSize) ||
+      minimumSize < 1 ||
+      maximumSize < minimumSize ||
+      maximumSize > 100
+    ) {
+      setError("Team size must be between 1 and 100, and the maximum must be at least the minimum.");
+      return;
+    }
+
     // -----------------------------------------------------
     // CREATE HACKATHON
     // -----------------------------------------------------
@@ -175,6 +195,14 @@ export default function CreateHackathonPage() {
 
             description:
               description.trim(),
+
+            location: location.trim(),
+            mode,
+            prizePool: Number(prizePool || 0),
+            registrationFee: Number(registrationFee || 0),
+            registrationFeeType,
+            minTeamSize: minimumSize,
+            maxTeamSize: maximumSize,
 
             startDate:
               start.toISOString(),
@@ -442,6 +470,130 @@ export default function CreateHackathonPage() {
             />
 
           </div>
+
+          <section className="mt-6 rounded-xl border border-slate-800 bg-slate-950/50 p-5">
+            <h2 className="text-lg font-semibold">Event Details</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              These details will appear on the public hackathon page.
+            </p>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              <div>
+                <label htmlFor="hackathon-location" className="text-sm font-medium text-slate-300">
+                  Location <span className="text-slate-500">(for in-person or hybrid events)</span>
+                </label>
+                <input
+                  id="hackathon-location"
+                  value={location}
+                  onChange={(event) => setLocation(event.target.value)}
+                  placeholder="City, venue or online platform"
+                  disabled={loading}
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="hackathon-mode" className="text-sm font-medium text-slate-300">
+                  Event Mode
+                </label>
+                <select
+                  id="hackathon-mode"
+                  value={mode}
+                  onChange={(event) => setMode(event.target.value)}
+                  disabled={loading}
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+                >
+                  <option value="ONLINE">Online</option>
+                  <option value="OFFLINE">Offline</option>
+                  <option value="HYBRID">Hybrid</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="hackathon-prize" className="text-sm font-medium text-slate-300">
+                  Total Prize Pool (INR)
+                </label>
+                <input
+                  id="hackathon-prize"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={prizePool}
+                  onChange={(event) => setPrizePool(event.target.value)}
+                  disabled={loading}
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="registration-fee" className="text-sm font-medium text-slate-300">
+                  Registration Fee (INR)
+                </label>
+                <div className="mt-2 grid grid-cols-2 gap-3">
+                  <input
+                    id="registration-fee"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={registrationFee}
+                    onChange={(event) => setRegistrationFee(event.target.value)}
+                    disabled={loading}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+                  />
+                  <select
+                    aria-label="Registration fee charged per"
+                    value={registrationFeeType}
+                    onChange={(event) => setRegistrationFeeType(event.target.value)}
+                    disabled={loading}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-3 text-sm text-white outline-none focus:border-blue-500"
+                  >
+                    <option value="PER_TEAM">Per team</option>
+                    <option value="PER_MEMBER">Per member</option>
+                  </select>
+                </div>
+                <p className="mt-2 text-xs text-slate-500">Enter 0 for a free event.</p>
+              </div>
+
+              <div>
+                <label htmlFor="minimum-team-size" className="text-sm font-medium text-slate-300">
+                  Minimum Team Size
+                </label>
+                <input
+                  id="minimum-team-size"
+                  type="number"
+                  min="1"
+                  max={maxTeamSize || 100}
+                  step="1"
+                  value={minTeamSize}
+                  onChange={(event) => setMinTeamSize(event.target.value)}
+                  disabled={loading}
+                  required
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="maximum-team-size" className="text-sm font-medium text-slate-300">
+                  Maximum Team Size
+                </label>
+                <input
+                  id="maximum-team-size"
+                  type="number"
+                  min={minTeamSize || 1}
+                  max="100"
+                  step="1"
+                  value={maxTeamSize}
+                  onChange={(event) => setMaxTeamSize(event.target.value)}
+                  disabled={loading}
+                  required
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+                />
+                <p className="mt-2 text-xs text-slate-500">
+                  Includes the team leader. Team size can range from 1 to 100 members.
+                </p>
+              </div>
+            </div>
+          </section>
 
           {/* =================================================
               DATE & TIME

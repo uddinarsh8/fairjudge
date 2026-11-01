@@ -49,6 +49,14 @@ export default function CreateRoundPage() {
     setHackathonId(resolvedId);
   }, [params]);
 
+  useEffect(() => {
+    if (hackathonId) {
+      router.replace(
+        `/organizer/hackathons/${hackathonId}/rounds`
+      );
+    }
+  }, [hackathonId, router]);
+
   // =====================================================
   // SUBMIT
   // =====================================================

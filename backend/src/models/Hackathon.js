@@ -50,6 +50,52 @@ const hackathonSchema = new mongoose.Schema(
       required: true,
     },
 
+    location: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    mode: {
+      type: String,
+      enum: ["ONLINE", "OFFLINE", "HYBRID"],
+      default: "ONLINE",
+    },
+
+    prizePool: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+
+    registrationFee: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+
+    registrationFeeType: {
+      type: String,
+      enum: ["PER_MEMBER", "PER_TEAM"],
+      default: "PER_TEAM",
+    },
+
+    minTeamSize: {
+      type: Number,
+      min: 1,
+      max: 100,
+      default: 1,
+      validate: Number.isInteger,
+    },
+
+    maxTeamSize: {
+      type: Number,
+      min: 1,
+      max: 100,
+      default: 5,
+      validate: Number.isInteger,
+    },
+
     // =====================================================
     // STATUS
     // =====================================================
