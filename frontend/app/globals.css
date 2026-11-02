@@ -1,65 +1,65 @@
 @import "tailwindcss";
 
-/* Warm Championship: warm paper surfaces, indigo actions, coral and gold accents. */
+/* Glacier & Signal: ice-blue surfaces, navy text, cobalt actions, teal success, and signal-orange accents. */
 @theme {
-  --color-slate-950: #F2E6D3;
-  --color-slate-900: #FFF8ED;
-  --color-slate-800: #F5E8D2;
-  --color-slate-700: #E3D0B2;
-  --color-slate-600: #72675B;
-  --color-slate-500: #655D55;
-  --color-slate-400: #5E574F;
-  --color-slate-300: #49433D;
-  --color-slate-200: #39342F;
-  --color-slate-100: #292521;
-  --color-slate-50: #1D1916;
+  --color-slate-950: #E7EFF4;
+  --color-slate-900: #F0F6F8;
+  --color-slate-800: #E5EFF3;
+  --color-slate-700: #D1DEE5;
+  --color-slate-600: #637987;
+  --color-slate-500: #5C7180;
+  --color-slate-400: #526A79;
+  --color-slate-300: #415B6B;
+  --color-slate-200: #304858;
+  --color-slate-100: #203747;
+  --color-slate-50: #162A39;
 
-  --color-gray-950: #1D2635;
-  --color-gray-900: #FFF8ED;
-  --color-gray-800: #F5E8D2;
-  --color-gray-700: #E3D0B2;
-  --color-gray-600: #72675B;
-  --color-gray-500: #655D55;
-  --color-gray-400: #5E574F;
-  --color-gray-300: #49433D;
-  --color-gray-200: #39342F;
-  --color-gray-100: #292521;
-  --color-gray-50: #1D1916;
+  --color-gray-950: #173047;
+  --color-gray-900: #F0F6F8;
+  --color-gray-800: #E5EFF3;
+  --color-gray-700: #D1DEE5;
+  --color-gray-600: #637987;
+  --color-gray-500: #5C7180;
+  --color-gray-400: #526A79;
+  --color-gray-300: #415B6B;
+  --color-gray-200: #304858;
+  --color-gray-100: #203747;
+  --color-gray-50: #162A39;
 
-  --color-blue-50: #F5F4FF;
-  --color-blue-100: #E9E8FF;
-  --color-blue-200: #D6D4FF;
-  --color-blue-300: #4F46E5;
-  --color-blue-400: #574FD9;
-  --color-blue-500: #6259ED;
-  --color-blue-600: #4F46E5;
-  --color-blue-700: #4338CA;
-  --color-blue-800: #3730A3;
-  --color-blue-900: #312E81;
-  --color-blue-950: #1E1B4B;
+  --color-blue-50: #EEF5FF;
+  --color-blue-100: #DCEAFF;
+  --color-blue-200: #C1D7F5;
+  --color-blue-300: #35699B;
+  --color-blue-400: #2F62D4;
+  --color-blue-500: #3267D8;
+  --color-blue-600: #2F62D4;
+  --color-blue-700: #2553BC;
+  --color-blue-800: #1D448E;
+  --color-blue-900: #1C376E;
+  --color-blue-950: #13284A;
 
-  --color-indigo-50: #F5F4FF;
-  --color-indigo-100: #E9E8FF;
-  --color-indigo-200: #D6D4FF;
-  --color-indigo-300: #4F46E5;
-  --color-indigo-400: #574FD9;
-  --color-indigo-500: #6259ED;
-  --color-indigo-600: #4F46E5;
-  --color-indigo-700: #4338CA;
-  --color-indigo-800: #3730A3;
-  --color-indigo-900: #312E81;
-  --color-indigo-950: #1E1B4B;
+  --color-indigo-50: #EEF5FF;
+  --color-indigo-100: #DCEAFF;
+  --color-indigo-200: #C1D7F5;
+  --color-indigo-300: #35699B;
+  --color-indigo-400: #2F62D4;
+  --color-indigo-500: #3267D8;
+  --color-indigo-600: #2F62D4;
+  --color-indigo-700: #2553BC;
+  --color-indigo-800: #1D448E;
+  --color-indigo-900: #1C376E;
+  --color-indigo-950: #13284A;
 
-  --color-green-300: #126A5A;
-  --color-green-400: #147969;
-  --color-green-500: #168A76;
-  --color-green-600: #137561;
-  --color-green-700: #105B4D;
-  --color-emerald-300: #126A5A;
-  --color-emerald-400: #147969;
-  --color-emerald-500: #168A76;
-  --color-emerald-600: #137561;
-  --color-emerald-700: #105B4D;
+  --color-green-300: #155E59;
+  --color-green-400: #126C66;
+  --color-green-500: #1B948A;
+  --color-green-600: #167C74;
+  --color-green-700: #11655F;
+  --color-emerald-300: #155E59;
+  --color-emerald-400: #126C66;
+  --color-emerald-500: #1B948A;
+  --color-emerald-600: #167C74;
+  --color-emerald-700: #11655F;
 
   --color-red-300: #912018;
   --color-red-400: #B42318;
@@ -77,27 +77,27 @@
   --color-amber-500: #D99A2B;
   --color-amber-600: #946117;
 
-  --color-orange-400: #B84637;
-  --color-orange-500: #F1735F;
-  --color-orange-600: #D85C4B;
+  --color-orange-400: #B94C33;
+  --color-orange-500: #EF6A45;
+  --color-orange-600: #D95A39;
 
-  --color-purple-400: #7457E8;
-  --color-purple-500: #6545D7;
-  --color-purple-600: #5434C4;
+  --color-purple-400: #35699B;
+  --color-purple-500: #2F62D4;
+  --color-purple-600: #2553BC;
 }
 
 :root {
   color-scheme: light;
-  --fj-canvas: #F2E6D3;
-  --fj-surface: #FFF8ED;
-  --fj-subtle: #F5E8D2;
-  --fj-ink: #1D2635;
-  --fj-muted: #635C56;
-  --fj-border: #E3D0B2;
-  --fj-primary: #4F46E5;
-  --fj-coral: #F1735F;
+  --fj-canvas: #E7EFF4;
+  --fj-surface: #F0F6F8;
+  --fj-subtle: #E5EFF3;
+  --fj-ink: #173047;
+  --fj-muted: #5C7180;
+  --fj-border: #D1DEE5;
+  --fj-primary: #2F62D4;
+  --fj-coral: #EF6A45;
   --fj-gold: #E5AD3D;
-  --fj-teal: #168A76;
+  --fj-teal: #1B948A;
 }
 
 * {
@@ -118,7 +118,7 @@ body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Translate remaining legacy dark surfaces to the warm light theme. */
+/* Translate remaining legacy dark surfaces to the Glacier & Signal theme. */
 [class~="bg-[#060D19]"],
 [class~="bg-[#050B16]"],
 [class~="bg-[#050B16]/95"] {
@@ -155,7 +155,7 @@ body {
 [class~="hover:bg-white/5"]:hover,
 [class~="hover:bg-white/[0.05]"]:hover,
 [class~="hover:bg-white/[0.04]"]:hover {
-  background-color: #EBDCC7;
+  background-color: #DDE9EE;
 }
 
 /* Use ink on light surfaces even where legacy pages requested white or pale text. */
@@ -190,16 +190,16 @@ select {
 
 input::placeholder,
 textarea::placeholder {
-  color: #81786E;
+  color: #728895;
   opacity: 1;
 }
 
 :where(button, a, input, textarea, select, [tabindex]):focus-visible {
-  outline: 3px solid #A8A3FF;
+  outline: 3px solid #78A6EE;
   outline-offset: 2px;
 }
 
-/* Keep hover labels legible on the warm, light surfaces. */
+/* Keep hover labels legible on the ice-blue surfaces. */
 [class~="hover:text-white"]:hover,
 [class~="focus:text-white"]:focus,
 [class~="active:text-white"]:active,
@@ -221,4 +221,9 @@ textarea::placeholder {
 
 [class~="bg-white"] {
   background-color: var(--fj-surface);
+}
+
+
+.text-orange-400 {
+  color: #B94C33;
 }

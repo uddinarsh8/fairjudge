@@ -171,13 +171,13 @@ export default function HomePage() {
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 xl:grid-cols-[0.92fr_1.08fr]">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
-              <ShieldCheck size={16} />
+              <ShieldCheck size={16} className="text-orange-500" />
               Fair evaluation for every project
             </div>
 
             <h1 className="mt-7 text-5xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-6xl">
               Great ideas deserve
-              <span className="mt-2 block bg-gradient-to-r from-blue-600 via-purple-500 to-orange-500 bg-clip-text text-transparent">
+              <span className="mt-2 block bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500 bg-clip-text text-transparent">
                 fair judging.
               </span>
             </h1>
@@ -227,7 +227,7 @@ export default function HomePage() {
           <div className="relative mx-auto mt-4 w-full max-w-[700px] xl:mt-0">
             <div
               aria-hidden="true"
-              className="absolute -inset-5 rounded-[2rem] bg-gradient-to-br from-blue-200/70 via-white/40 to-amber-200/70 blur-2xl"
+              className="absolute -inset-5 rounded-[2rem] bg-gradient-to-br from-blue-200/70 via-emerald-100/60 to-orange-200/60 blur-2xl"
             />
             <div className="relative rounded-[1.75rem] border border-slate-700 bg-white p-2 shadow-[0_35px_100px_-40px_rgba(24,34,48,0.35)]">
               <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
@@ -292,7 +292,7 @@ export default function HomePage() {
 
       <section
         id="features"
-        className="border-y border-slate-700/80 bg-[#EAD9C1] px-6 py-24"
+        className="border-y border-slate-700/80 bg-[#DDE9EE] px-6 py-24"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -419,7 +419,7 @@ export default function HomePage() {
 
       <section
         id="roles"
-        className="bg-[#EAD9C1] px-6 py-28"
+        className="bg-[#DDE9EE] px-6 py-28"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -486,7 +486,7 @@ export default function HomePage() {
 
       <section className="px-6 py-28">
 
-        <div className="mx-auto max-w-5xl rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-100 via-amber-50 to-amber-100 p-10 text-center md:p-16">
+        <div className="mx-auto max-w-5xl rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-100 via-emerald-50 to-orange-100 p-10 text-center md:p-16">
 
           <h2 className="text-4xl font-bold md:text-5xl">
             Ready to Make Evaluation Fair?
