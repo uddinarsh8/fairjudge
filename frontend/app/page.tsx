@@ -292,7 +292,7 @@ export default function HomePage() {
 
       <section
         id="features"
-        className="border-y border-slate-700/80 bg-[#F7EFE3] px-6 py-24"
+        className="border-y border-slate-700/80 bg-[#EAD9C1] px-6 py-24"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -419,7 +419,7 @@ export default function HomePage() {
 
       <section
         id="roles"
-        className="bg-[#F7EFE3] px-6 py-28"
+        className="bg-[#EAD9C1] px-6 py-28"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -486,7 +486,7 @@ export default function HomePage() {
 
       <section className="px-6 py-28">
 
-        <div className="mx-auto max-w-5xl rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-100 via-white to-amber-100 p-10 text-center md:p-16">
+        <div className="mx-auto max-w-5xl rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-100 via-amber-50 to-amber-100 p-10 text-center md:p-16">
 
           <h2 className="text-4xl font-bold md:text-5xl">
             Ready to Make Evaluation Fair?

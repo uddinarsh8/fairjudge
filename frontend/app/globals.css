@@ -2,10 +2,10 @@
 
 /* Warm Championship: warm paper surfaces, indigo actions, coral and gold accents. */
 @theme {
-  --color-slate-950: #FFF8EF;
-  --color-slate-900: #FFFFFF;
-  --color-slate-800: #FBF6EE;
-  --color-slate-700: #E9E0D5;
+  --color-slate-950: #F2E6D3;
+  --color-slate-900: #FFF8ED;
+  --color-slate-800: #F5E8D2;
+  --color-slate-700: #E3D0B2;
   --color-slate-600: #72675B;
   --color-slate-500: #655D55;
   --color-slate-400: #5E574F;
@@ -15,9 +15,9 @@
   --color-slate-50: #1D1916;
 
   --color-gray-950: #1D2635;
-  --color-gray-900: #FFFFFF;
-  --color-gray-800: #FBF6EE;
-  --color-gray-700: #E9E0D5;
+  --color-gray-900: #FFF8ED;
+  --color-gray-800: #F5E8D2;
+  --color-gray-700: #E3D0B2;
   --color-gray-600: #72675B;
   --color-gray-500: #655D55;
   --color-gray-400: #5E574F;
@@ -88,12 +88,12 @@
 
 :root {
   color-scheme: light;
-  --fj-canvas: #FFF8EF;
-  --fj-surface: #FFFFFF;
-  --fj-subtle: #FCF5EA;
+  --fj-canvas: #F2E6D3;
+  --fj-surface: #FFF8ED;
+  --fj-subtle: #F5E8D2;
   --fj-ink: #1D2635;
   --fj-muted: #635C56;
-  --fj-border: #E9E0D5;
+  --fj-border: #E3D0B2;
   --fj-primary: #4F46E5;
   --fj-coral: #F1735F;
   --fj-gold: #E5AD3D;
@@ -155,7 +155,7 @@ body {
 [class~="hover:bg-white/5"]:hover,
 [class~="hover:bg-white/[0.05]"]:hover,
 [class~="hover:bg-white/[0.04]"]:hover {
-  background-color: #F7EFE3;
+  background-color: #EBDCC7;
 }
 
 /* Use ink on light surfaces even where legacy pages requested white or pale text. */
@@ -217,4 +217,8 @@ textarea::placeholder {
 [class~="bg-red-600"],
 [class~="bg-red-500"] {
   color: #FFFFFF;
+}
+
+[class~="bg-white"] {
+  background-color: var(--fj-surface);
 }
