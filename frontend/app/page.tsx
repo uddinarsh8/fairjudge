@@ -292,7 +292,7 @@ export default function HomePage() {
 
       <section
         id="features"
-        className="border-y border-slate-700/80 bg-[#141A2A] px-6 py-24"
+        className="border-y border-slate-700/80 bg-[#DDD6CC] px-6 py-24"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -419,7 +419,7 @@ export default function HomePage() {
 
       <section
         id="roles"
-        className="bg-[#141A2A] px-6 py-28"
+        className="bg-[#DDD6CC] px-6 py-28"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -660,7 +660,13 @@ function ProjectRank({
 
       <div className="flex items-center gap-3">
 
-        <span className={rank === "01" ? "flex h-7 w-7 items-center justify-center rounded-full bg-yellow-400 text-xs font-bold text-slate-950" : "flex h-7 w-7 items-center justify-center rounded-full bg-slate-800 text-xs font-bold text-slate-300"}>{Number(rank)}</span>
+        <span
+          className={rank === "01"
+            ? "flex h-7 w-7 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white"
+            : "flex h-7 w-7 items-center justify-center rounded-full bg-slate-800 text-xs font-bold text-slate-300"}
+        >
+          {Number(rank)}
+        </span>
 
         <span className="text-sm text-slate-300">
           {name}
