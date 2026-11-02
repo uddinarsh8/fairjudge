@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
+  Menu,
+  X,
   BarChart3,
   CheckCircle2,
   ClipboardCheck,
@@ -15,6 +18,7 @@ import {
 
 export default function HomePage() {
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <main className="min-h-screen overflow-hidden bg-slate-950 text-white">
@@ -22,17 +26,16 @@ export default function HomePage() {
       {/* ================= NAVBAR ================= */}
 
       <nav className="sticky top-0 z-50 border-b border-slate-800/70 bg-slate-950/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-20 sm:px-6">
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2 sm:gap-3"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600">
               <Scale size={21} />
             </div>
 
-            <span className="text-xl font-bold tracking-tight">
+            <span className="text-lg font-bold tracking-tight sm:text-xl">
               Fair<span className="text-blue-500">Judge</span>
             </span>
           </button>
@@ -59,10 +62,10 @@ export default function HomePage() {
             </button>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-3 md:flex">
             <button
               onClick={() => router.push("/login")}
-              className="hidden text-sm font-medium text-slate-300 hover:text-white sm:block"
+              className="text-sm font-medium text-slate-300 hover:text-white"
             >
               Login
             </button>
@@ -75,7 +78,85 @@ export default function HomePage() {
             </button>
           </div>
 
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700 text-slate-300 transition hover:bg-slate-800 hover:text-white md:hidden"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
+
+        {mobileMenuOpen && (
+          <div
+            id="mobile-navigation"
+            className="border-t border-slate-800 bg-slate-950 px-4 py-3 sm:px-6 md:hidden"
+          >
+            <div className="mx-auto flex max-w-7xl flex-col">
+              <a
+                href="#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg px-3 py-3 text-sm text-slate-300 transition hover:bg-slate-900 hover:text-white"
+              >
+                Features
+              </a>
+
+              <a
+                href="#how-it-works"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg px-3 py-3 text-sm text-slate-300 transition hover:bg-slate-900 hover:text-white"
+              >
+                How It Works
+              </a>
+
+              <a
+                href="#roles"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg px-3 py-3 text-sm text-slate-300 transition hover:bg-slate-900 hover:text-white"
+              >
+                Platform
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  router.push("/hackathons");
+                }}
+                className="rounded-lg px-3 py-3 text-left text-sm text-slate-300 transition hover:bg-slate-900 hover:text-white"
+              >
+                Hackathons
+              </button>
+
+              <div className="mt-2 grid grid-cols-2 gap-3 border-t border-slate-800 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    router.push("/login");
+                  }}
+                  className="rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-900 hover:text-white"
+                >
+                  Login
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    router.push("/register");
+                  }}
+                  className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold transition hover:bg-blue-500"
+                >
+                  Get Started
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
 
