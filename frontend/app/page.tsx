@@ -21,7 +21,7 @@ export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <main className="min-h-screen overflow-hidden bg-slate-950 text-white">
+    <main className="min-h-screen overflow-hidden bg-slate-950 text-slate-950">
 
       {/* ================= NAVBAR ================= */}
 
@@ -162,220 +162,137 @@ export default function HomePage() {
 
       {/* ================= HERO ================= */}
 
-      <section className="relative px-6 pb-24 pt-20 lg:pb-32 lg:pt-28">
+      <section className="relative isolate overflow-hidden px-6 pb-20 pt-14 lg:pb-24 lg:pt-16">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] bg-gradient-to-b from-blue-100/80 via-slate-950/25 to-transparent"
+        />
 
-        {/* Background Glow */}
-
-        <div className="absolute left-1/2 top-0 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-blue-600/10 blur-[120px]" />
-
-        <div className="relative mx-auto max-w-7xl">
-
-          <div className="mx-auto max-w-4xl text-center">
-
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm text-blue-400">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-12 xl:grid-cols-[0.92fr_1.08fr]">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
               <ShieldCheck size={16} />
-              Fair • Transparent • Structured Evaluation
+              Fair evaluation for every project
             </div>
 
-            <h1 className="mt-8 text-5xl font-bold leading-tight tracking-tight md:text-7xl">
-              Make Hackathon Evaluation
-              <span className="block bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
-                Fair & Transparent.
+            <h1 className="mt-7 text-5xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-6xl">
+              Great ideas deserve
+              <span className="mt-2 block bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 bg-clip-text text-transparent">
+                fair judging.
               </span>
             </h1>
 
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-400 md:text-xl">
-              FairJudge helps hackathon organizers create structured
-              evaluation rounds, assign judges, define scoring criteria,
-              and generate transparent results.
+            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-500">
+              Plan evaluation rounds, give every judge consistent scoring criteria,
+              and publish results teams can understand.
             </p>
 
-            <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={() => router.push("/register")}
-                className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-7 py-4 font-semibold transition hover:bg-blue-500"
+                className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-500"
               >
-                Create Your Hackathon
+                Create a Hackathon
                 <ArrowRight size={18} />
               </button>
 
               <button
                 onClick={() => {
-                  document
-                    .getElementById("how-it-works")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                    });
+                  document.getElementById("how-it-works")?.scrollIntoView({
+                    behavior: "smooth",
+                  });
                 }}
-                className="rounded-xl border border-slate-700 bg-slate-900 px-7 py-4 font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800"
+                className="rounded-xl border border-slate-700 bg-white px-6 py-3.5 font-semibold text-slate-200 transition hover:border-blue-300 hover:bg-blue-50"
               >
-                Explore Platform
+                Explore how it works
               </button>
-
             </div>
 
+            <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">
+              <span className="inline-flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-green-600" />
+                Consistent criteria
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-green-600" />
+                Clear judge assignments
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-green-600" />
+                Transparent results
+              </span>
+            </div>
           </div>
 
-
-          {/* ================= DASHBOARD PREVIEW ================= */}
-
-          <div className="relative mx-auto mt-20 max-w-6xl">
-
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-3 shadow-2xl shadow-blue-950/40">
-
-              <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
-
-                {/* Fake Dashboard Header */}
-
-                <div className="flex items-center justify-between border-b border-slate-800 px-6 py-5">
-
+          <div className="relative mx-auto mt-4 w-full max-w-[700px] xl:mt-0">
+            <div
+              aria-hidden="true"
+              className="absolute -inset-5 rounded-[2rem] bg-blue-100/80 blur-2xl"
+            />
+            <div className="relative rounded-[1.75rem] border border-slate-700 bg-white p-2 shadow-[0_35px_100px_-40px_rgba(24,34,48,0.35)]">
+              <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
+                <div className="flex items-center justify-between border-b border-slate-800 bg-white px-5 py-4 sm:px-6">
                   <div>
-                    <p className="text-xs text-slate-500">
-                      ORGANIZER DASHBOARD
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Organizer dashboard
                     </p>
-
-                    <h3 className="mt-1 text-lg font-semibold">
+                    <h3 className="mt-1 text-base font-semibold text-slate-950 sm:text-lg">
                       Smart India Hackathon 2026
                     </h3>
                   </div>
-
-                  <div className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
-                    Evaluation Active
+                  <div className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+                    Evaluation active
                   </div>
-
                 </div>
 
-
-                {/* Dashboard Stats */}
-
-                <div className="grid gap-4 p-6 md:grid-cols-4">
-
-                  <DashboardStat
-                    title="Teams"
-                    value="48"
-                    icon={<Users size={19} />}
-                  />
-
-                  <DashboardStat
-                    title="Judges"
-                    value="12"
-                    icon={<Star size={19} />}
-                  />
-
-                  <DashboardStat
-                    title="Rounds"
-                    value="3"
-                    icon={<ClipboardCheck size={19} />}
-                  />
-
-                  <DashboardStat
-                    title="Evaluated"
-                    value="82%"
-                    icon={<BarChart3 size={19} />}
-                  />
-
+                <div className="grid gap-3 p-4 sm:grid-cols-4 sm:p-5">
+                  <DashboardStat title="Teams" value="48" icon={<Users size={19} />} />
+                  <DashboardStat title="Judges" value="12" icon={<Star size={19} />} />
+                  <DashboardStat title="Rounds" value="3" icon={<ClipboardCheck size={19} />} />
+                  <DashboardStat title="Evaluated" value="82%" icon={<BarChart3 size={19} />} />
                 </div>
 
-
-                {/* Evaluation Preview */}
-
-                <div className="grid gap-6 border-t border-slate-800 p-6 lg:grid-cols-[1.4fr_1fr]">
-
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-
+                <div className="grid gap-4 border-t border-slate-800 p-4 xl:grid-cols-[1.4fr_1fr] xl:p-5">
+                  <div className="rounded-xl border border-slate-800 bg-white p-4 sm:p-5">
                     <div className="flex items-center justify-between">
-
                       <div>
-                        <p className="text-sm font-semibold">
-                          Evaluation Progress
-                        </p>
-
-                        <p className="mt-1 text-xs text-slate-500">
-                          Round 2 — Prototype Evaluation
-                        </p>
+                        <p className="text-sm font-semibold text-slate-950">Evaluation progress</p>
+                        <p className="mt-1 text-xs text-slate-500">Round 2 - Prototype Evaluation</p>
                       </div>
-
-                      <span className="text-sm font-semibold text-blue-400">
-                        82%
-                      </span>
-
+                      <span className="text-sm font-bold text-blue-600">82%</span>
                     </div>
 
-                    <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-800">
-                      <div className="h-full w-[82%] rounded-full bg-blue-500" />
+                    <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-slate-800">
+                      <div className="h-full w-[82%] rounded-full bg-blue-600" />
                     </div>
 
-                    <div className="mt-6 space-y-3">
-
-                      <ProgressRow
-                        label="Innovation"
-                        value="95%"
-                      />
-
-                      <ProgressRow
-                        label="Technical Feasibility"
-                        value="84%"
-                      />
-
-                      <ProgressRow
-                        label="Market Potential"
-                        value="72%"
-                      />
-
+                    <div className="mt-5 space-y-3">
+                      <ProgressRow label="Innovation" value="95%" />
+                      <ProgressRow label="Technical Feasibility" value="84%" />
+                      <ProgressRow label="Market Potential" value="72%" />
                     </div>
-
                   </div>
 
-
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-
-                    <p className="text-sm font-semibold">
-                      Top Projects
-                    </p>
-
-                    <div className="mt-5 space-y-4">
-
-                      <ProjectRank
-                        rank="01"
-                        name="HealthSync AI"
-                        score="94.8"
-                      />
-
-                      <ProjectRank
-                        rank="02"
-                        name="GreenTech Solutions"
-                        score="91.4"
-                      />
-
-                      <ProjectRank
-                        rank="03"
-                        name="SafeRoute"
-                        score="89.7"
-                      />
-
+                  <div className="rounded-xl border border-slate-800 bg-white p-4 sm:p-5">
+                    <p className="text-sm font-semibold text-slate-950">Top projects</p>
+                    <div className="mt-4 space-y-4">
+                      <ProjectRank rank="01" name="HealthSync AI" score="94.8" />
+                      <ProjectRank rank="02" name="GreenTech Solutions" score="91.4" />
+                      <ProjectRank rank="03" name="SafeRoute" score="89.7" />
                     </div>
-
                   </div>
-
                 </div>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
-
 
       {/* ================= FEATURES ================= */}
 
       <section
         id="features"
-        className="border-y border-slate-800 bg-slate-900/40 px-6 py-24"
+        className="border-y border-slate-700/80 bg-[#EAF0F8] px-6 py-24"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -502,7 +419,7 @@ export default function HomePage() {
 
       <section
         id="roles"
-        className="bg-slate-900/40 px-6 py-28"
+        className="bg-[#EAF0F8] px-6 py-28"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -569,7 +486,7 @@ export default function HomePage() {
 
       <section className="px-6 py-28">
 
-        <div className="mx-auto max-w-5xl rounded-3xl border border-blue-500/20 bg-gradient-to-br from-blue-600/20 to-slate-900 p-10 text-center md:p-16">
+        <div className="mx-auto max-w-5xl rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-100 via-white to-amber-50 p-10 text-center md:p-16">
 
           <h2 className="text-4xl font-bold md:text-5xl">
             Ready to Make Evaluation Fair?
@@ -776,7 +693,7 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950 p-6 transition hover:-translate-y-1 hover:border-blue-500/40">
+    <div className="rounded-2xl border border-slate-700 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-lg">
 
       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
         {icon}
