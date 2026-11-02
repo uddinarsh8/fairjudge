@@ -177,7 +177,7 @@ export default function HomePage() {
 
             <h1 className="mt-7 text-5xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-6xl">
               Great ideas deserve
-              <span className="mt-2 block bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500 bg-clip-text text-transparent">
+              <span className="mt-2 block bg-gradient-to-r from-blue-600 via-purple-500 to-emerald-500 bg-clip-text text-transparent">
                 fair judging.
               </span>
             </h1>
@@ -227,7 +227,7 @@ export default function HomePage() {
           <div className="relative mx-auto mt-4 w-full max-w-[700px] xl:mt-0">
             <div
               aria-hidden="true"
-              className="absolute -inset-5 rounded-[2rem] bg-gradient-to-br from-blue-200/70 via-emerald-100/60 to-orange-200/60 blur-2xl"
+              className="absolute -inset-5 rounded-[2rem] bg-gradient-to-br from-blue-200/70 via-purple-100/60 to-emerald-100/60 blur-2xl"
             />
             <div className="relative rounded-[1.75rem] border border-slate-700 bg-white p-2 shadow-[0_35px_100px_-40px_rgba(24,34,48,0.35)]">
               <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
@@ -292,7 +292,7 @@ export default function HomePage() {
 
       <section
         id="features"
-        className="border-y border-slate-700/80 bg-[#DDE9EE] px-6 py-24"
+        className="border-y border-slate-700/80 bg-[#DFDDEB] px-6 py-24"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -419,7 +419,7 @@ export default function HomePage() {
 
       <section
         id="roles"
-        className="bg-[#DDE9EE] px-6 py-28"
+        className="bg-[#DFDDEB] px-6 py-28"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -486,7 +486,7 @@ export default function HomePage() {
 
       <section className="px-6 py-28">
 
-        <div className="mx-auto max-w-5xl rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-100 via-emerald-50 to-orange-100 p-10 text-center md:p-16">
+        <div className="mx-auto max-w-5xl rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-100 via-purple-50 to-emerald-100 p-10 text-center md:p-16">
 
           <h2 className="text-4xl font-bold md:text-5xl">
             Ready to Make Evaluation Fair?
