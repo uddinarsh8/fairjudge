@@ -292,7 +292,7 @@ export default function HomePage() {
 
       <section
         id="features"
-        className="border-y border-slate-700/80 bg-[#DFDDEB] px-6 py-24"
+        className="border-y border-slate-700/80 bg-[#E4DAE1] px-6 py-24"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -419,7 +419,7 @@ export default function HomePage() {
 
       <section
         id="roles"
-        className="bg-[#DFDDEB] px-6 py-28"
+        className="bg-[#E4DAE1] px-6 py-28"
       >
 
         <div className="mx-auto max-w-7xl">
