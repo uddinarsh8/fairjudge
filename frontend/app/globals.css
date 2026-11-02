@@ -1,103 +1,104 @@
 @import "tailwindcss";
 
-/* Mauve & Copper: mauve-gray surfaces, graphite text, mauve actions, sage success, and copper accents. */
+/* Midnight Gold: deep low-glare surfaces, periwinkle actions, coral, gold, and mint. */
 @theme {
-  --color-slate-950: #ECE7EB;
-  --color-slate-900: #F3EEF1;
-  --color-slate-800: #E7DFE4;
-  --color-slate-700: #D8CCD3;
-  --color-slate-600: #766873;
-  --color-slate-500: #6F626D;
-  --color-slate-400: #625661;
-  --color-slate-300: #4F4350;
-  --color-slate-200: #3F3440;
-  --color-slate-100: #332A34;
-  --color-slate-50: #241D26;
+  --color-slate-950: #0F1424;
+  --color-slate-900: #171D33;
+  --color-slate-800: #202842;
+  --color-slate-700: #2D3655;
+  --color-slate-600: #73809F;
+  --color-slate-500: #98A2BD;
+  --color-slate-400: #A4ADC7;
+  --color-slate-300: #C6CCDA;
+  --color-slate-200: #DCE1EC;
+  --color-slate-100: #EBEEF5;
+  --color-slate-50: #F6F7FA;
 
-  --color-gray-950: #312B35;
-  --color-gray-900: #F3EEF1;
-  --color-gray-800: #E7DFE4;
-  --color-gray-700: #D8CCD3;
-  --color-gray-600: #766873;
-  --color-gray-500: #6F626D;
-  --color-gray-400: #625661;
-  --color-gray-300: #4F4350;
-  --color-gray-200: #3F3440;
-  --color-gray-100: #332A34;
-  --color-gray-50: #241D26;
+  --color-gray-950: #0F1424;
+  --color-gray-900: #171D33;
+  --color-gray-800: #202842;
+  --color-gray-700: #2D3655;
+  --color-gray-600: #73809F;
+  --color-gray-500: #98A2BD;
+  --color-gray-400: #A4ADC7;
+  --color-gray-300: #C6CCDA;
+  --color-gray-200: #DCE1EC;
+  --color-gray-100: #EBEEF5;
+  --color-gray-50: #F6F7FA;
 
-  --color-blue-50: #F8F3F6;
-  --color-blue-100: #F0E6ED;
-  --color-blue-200: #DFC9D7;
-  --color-blue-300: #9A7D92;
-  --color-blue-400: #85647F;
-  --color-blue-500: #906F89;
-  --color-blue-600: #85647F;
-  --color-blue-700: #72556D;
-  --color-blue-800: #5E455A;
-  --color-blue-900: #4A3547;
-  --color-blue-950: #342637;
+  --color-blue-50: #1C2340;
+  --color-blue-100: #252D50;
+  --color-blue-200: #374174;
+  --color-blue-300: #5963C2;
+  --color-blue-400: #727AF0;
+  --color-blue-500: #7079F4;
+  --color-blue-600: #7C83FF;
+  --color-blue-700: #6D74E8;
+  --color-blue-800: #555EC2;
+  --color-blue-900: #424C9E;
+  --color-blue-950: #293277;
 
-  --color-indigo-50: #F8F3F6;
-  --color-indigo-100: #F0E6ED;
-  --color-indigo-200: #DFC9D7;
-  --color-indigo-300: #9A7D92;
-  --color-indigo-400: #85647F;
-  --color-indigo-500: #906F89;
-  --color-indigo-600: #85647F;
-  --color-indigo-700: #72556D;
-  --color-indigo-800: #5E455A;
-  --color-indigo-900: #4A3547;
-  --color-indigo-950: #342637;
+  --color-indigo-50: #1C2340;
+  --color-indigo-100: #252D50;
+  --color-indigo-200: #374174;
+  --color-indigo-300: #5963C2;
+  --color-indigo-400: #727AF0;
+  --color-indigo-500: #7079F4;
+  --color-indigo-600: #7C83FF;
+  --color-indigo-700: #6D74E8;
+  --color-indigo-800: #555EC2;
+  --color-indigo-900: #424C9E;
+  --color-indigo-950: #293277;
 
-  --color-green-300: #35685E;
-  --color-green-400: #47796E;
-  --color-green-500: #548278;
-  --color-green-600: #47796E;
-  --color-green-700: #35685E;
-  --color-emerald-300: #35685E;
-  --color-emerald-400: #47796E;
-  --color-emerald-500: #548278;
-  --color-emerald-600: #47796E;
-  --color-emerald-700: #35685E;
+  --color-green-300: #6CE4AB;
+  --color-green-400: #4ADE9C;
+  --color-green-500: #4ADE9C;
+  --color-green-600: #35C784;
+  --color-green-700: #239F69;
+  --color-emerald-300: #6CE4AB;
+  --color-emerald-400: #4ADE9C;
+  --color-emerald-500: #4ADE9C;
+  --color-emerald-600: #35C784;
+  --color-emerald-700: #239F69;
 
-  --color-red-300: #912018;
-  --color-red-400: #B42318;
-  --color-red-500: #D92D20;
-  --color-red-600: #B42318;
-  --color-red-700: #912018;
+  --color-red-300: #FF9B9B;
+  --color-red-400: #FF8585;
+  --color-red-500: #FF7070;
+  --color-red-600: #EA5B68;
+  --color-red-700: #C94455;
 
-  --color-yellow-300: #8D673B;
-  --color-yellow-400: #C99A44;
-  --color-yellow-500: #C99A44;
-  --color-yellow-600: #A97A35;
-  --color-amber-200: #75502A;
-  --color-amber-300: #8D673B;
-  --color-amber-400: #C99A44;
-  --color-amber-500: #B98954;
-  --color-amber-600: #8D673B;
+  --color-yellow-300: #FFD77A;
+  --color-yellow-400: #FFC857;
+  --color-yellow-500: #FFC857;
+  --color-yellow-600: #E6AE3E;
+  --color-amber-200: #FFE09A;
+  --color-amber-300: #FFD77A;
+  --color-amber-400: #FFC857;
+  --color-amber-500: #E6AE3E;
+  --color-amber-600: #C9922F;
 
-  --color-orange-400: #92513F;
-  --color-orange-500: #B46B52;
-  --color-orange-600: #995A45;
+  --color-orange-300: #FFA48B;
+  --color-orange-400: #FF8A6B;
+  --color-orange-500: #FF8A6B;
+  --color-orange-600: #F07457;
 
-  --color-purple-400: #85647F;
-  --color-purple-500: #906F89;
-  --color-purple-600: #72556D;
+  --color-purple-400: #B3A0FF;
+  --color-purple-500: #A78BFA;
+  --color-purple-600: #8B76E8;
 }
 
 :root {
-  color-scheme: light;
-  --fj-canvas: #ECE7EB;
-  --fj-surface: #F3EEF1;
-  --fj-subtle: #E7DFE4;
-  --fj-ink: #312B35;
-  --fj-muted: #6F626D;
-  --fj-border: #D8CCD3;
-  --fj-primary: #85647F;
-  --fj-coral: #B46B52;
-  --fj-gold: #B98954;
-  --fj-teal: #548278;
+  color-scheme: dark;
+  --fj-canvas: #0F1424;
+  --fj-surface: #171D33;
+  --fj-subtle: #202842;
+  --fj-ink: #E7EAF3;
+  --fj-muted: #A4ADC7;
+  --fj-border: #2D3655;
+  --fj-primary: #7C83FF;
+  --fj-coral: #FF8A6B;
+  --fj-gold: #FFC857;
+  --fj-teal: #4ADE9C;
 }
 
 * {
@@ -118,7 +119,7 @@ body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Translate remaining legacy dark surfaces to the Glacier & Signal theme. */
+/* Translate legacy light and dark surfaces to the Midnight Gold palette. */
 [class~="bg-[#060D19]"],
 [class~="bg-[#050B16]"],
 [class~="bg-[#050B16]/95"] {
@@ -133,6 +134,10 @@ body {
   background-color: var(--fj-subtle);
 }
 
+[class~="bg-white"] {
+  background-color: var(--fj-surface);
+}
+
 [class~="border-white/10"],
 [class~="border-white/30"],
 [class~="border-white/[0.08]"],
@@ -140,7 +145,7 @@ body {
 [class~="border-white/[0.06]"],
 [class~="border-white/[0.05]"],
 [class~="border-white/[0.04]"] {
-  border-color: var(--fj-border);
+  border-color: #303A5C;
 }
 
 [class~="bg-white/5"],
@@ -149,37 +154,48 @@ body {
 [class~="bg-white/[0.03]"],
 [class~="bg-white/[0.025]"],
 [class~="bg-white/[0.02]"] {
-  background-color: var(--fj-subtle);
+  background-color: #1B2340;
 }
 
 [class~="hover:bg-white/5"]:hover,
 [class~="hover:bg-white/[0.05]"]:hover,
 [class~="hover:bg-white/[0.04]"]:hover {
-  background-color: #E4DAE1;
+  background-color: #242E4A;
 }
 
-/* Use ink on light surfaces even where legacy pages requested white or pale text. */
-.text-white,
+/* Keep inherited white text light, with dark ink for special slate-950 labels. */
+.text-white {
+  color: var(--fj-ink);
+}
+
 .text-slate-950,
+.text-gray-950 {
+  color: var(--fj-canvas);
+}
+
+.text-slate-900,
 .text-slate-800,
 .text-slate-700,
 .text-gray-900,
 .text-gray-800,
 .text-gray-700 {
-  color: var(--fj-ink);
+  color: #E3E8F2;
 }
 
 .text-yellow-400,
 .text-yellow-500,
-.text-amber-400,
+.text-amber-400 {
+  color: #FFC857;
+}
+
 .text-orange-400 {
-  color: #75502A;
+  color: #FF8A6B;
 }
 
 input,
 textarea,
 select {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
@@ -190,16 +206,20 @@ select {
 
 input::placeholder,
 textarea::placeholder {
-  color: #766B77;
+  color: #98A2BD;
   opacity: 1;
 }
 
 :where(button, a, input, textarea, select, [tabindex]):focus-visible {
-  outline: 3px solid #B799AC;
+  outline: 3px solid #8F96FF;
   outline-offset: 2px;
 }
 
-/* Keep hover labels legible on the ice-blue surfaces. */
+::selection {
+  color: #FFFFFF;
+  background: #6269E8;
+}
+
 [class~="hover:text-white"]:hover,
 [class~="focus:text-white"]:focus,
 [class~="active:text-white"]:active,
@@ -207,7 +227,7 @@ textarea::placeholder {
   color: var(--fj-ink);
 }
 
-/* Saturated action surfaces use white foreground text. */
+/* Primary actions retain light labels over their saturated fills. */
 [class~="bg-blue-600"],
 [class~="bg-blue-500"],
 [class~="bg-blue-700"],
@@ -217,13 +237,4 @@ textarea::placeholder {
 [class~="bg-red-600"],
 [class~="bg-red-500"] {
   color: #FFFFFF;
-}
-
-[class~="bg-white"] {
-  background-color: var(--fj-surface);
-}
-
-
-.text-orange-400 {
-  color: #92513F;
 }

@@ -177,7 +177,7 @@ export default function HomePage() {
 
             <h1 className="mt-7 text-5xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-6xl">
               Great ideas deserve
-              <span className="mt-2 block bg-gradient-to-r from-blue-600 via-purple-500 to-emerald-500 bg-clip-text text-transparent">
+              <span className="mt-2 block bg-gradient-to-r from-blue-600 via-purple-500 to-orange-500 bg-clip-text text-transparent">
                 fair judging.
               </span>
             </h1>
@@ -292,7 +292,7 @@ export default function HomePage() {
 
       <section
         id="features"
-        className="border-y border-slate-700/80 bg-[#E4DAE1] px-6 py-24"
+        className="border-y border-slate-700/80 bg-[#141A2A] px-6 py-24"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -419,7 +419,7 @@ export default function HomePage() {
 
       <section
         id="roles"
-        className="bg-[#E4DAE1] px-6 py-28"
+        className="bg-[#141A2A] px-6 py-28"
       >
 
         <div className="mx-auto max-w-7xl">
@@ -660,9 +660,7 @@ function ProjectRank({
 
       <div className="flex items-center gap-3">
 
-        <span className="text-sm font-bold text-blue-400">
-          {rank}
-        </span>
+        <span className={rank === "01" ? "flex h-7 w-7 items-center justify-center rounded-full bg-yellow-400 text-xs font-bold text-slate-950" : "flex h-7 w-7 items-center justify-center rounded-full bg-slate-800 text-xs font-bold text-slate-300"}>{Number(rank)}</span>
 
         <span className="text-sm text-slate-300">
           {name}
